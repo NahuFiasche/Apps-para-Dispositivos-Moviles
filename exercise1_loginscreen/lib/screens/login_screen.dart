@@ -1,4 +1,5 @@
 import 'package:exercise1_loginscreen/screens/home_screen.dart';
+import 'package:exercise1_loginscreen/data/users_credentials.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,13 +7,6 @@ class LoginScreen extends StatelessWidget {
   static const String name = 'login_screen';
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
-  final List<Map<String, String>> validUsers = [
-    {'username': 'admin', 'password': 'admin'},
-    {'username': 'user1', 'password': '1234'},
-    {'username': 'juan', 'password': 'password'},
-    {'username': 'Nahuel', 'password': '123456'},
-  ];
 
   LoginScreen({super.key});
 
