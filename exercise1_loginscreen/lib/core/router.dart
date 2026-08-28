@@ -1,3 +1,4 @@
+import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:exercise1_loginscreen/screens/game_library_screen.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
 import 'package:exercise1_loginscreen/screens/game_detail_screen.dart';
@@ -20,7 +21,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: 'gameDetail_screen',
       path: '/gameDetail_screen',
-      builder: (context, state) => GameDetailScreen(),
+      builder: (context, state) => GameDetailScreen(game: state.extra as Game),
     ),
   ],
 );
