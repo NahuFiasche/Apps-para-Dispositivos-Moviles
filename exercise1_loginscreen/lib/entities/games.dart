@@ -4,9 +4,9 @@ class Game {
   final String developer;
   final String releaseYear;
   final String plattform;
+  final String description;
   final String? gameCover;
-  final String gameImage1;
-  final String gameImage2;
+  final List<String> gameImages;
 
   Game({
     required this.id,
@@ -14,8 +14,8 @@ class Game {
     required this.developer,
     required this.releaseYear,
     required this.plattform,
+    required this.description,
     required this.gameCover,
-    required this.gameImage1,
-    required this.gameImage2,
+    required this.gameImages,
   });
 }

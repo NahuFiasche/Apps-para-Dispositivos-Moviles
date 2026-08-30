@@ -15,68 +15,135 @@ class GameDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(game.title),
         centerTitle: true,
-        titleTextStyle: textTheme.headlineMedium,
+        titleTextStyle: textTheme.headlineSmall,
       ),
-      body: GameDetailBodyBuilder(textTheme: textTheme, game: game),
+      body: GameDetailBodyBuilder(game: game),
     );
   }
 }
 
 class GameDetailBodyBuilder extends StatelessWidget {
-  final TextTheme textTheme;
   final Game game;
 
-  const new({super.key, required this.textTheme, required this.game});
+  const GameDetailBodyBuilder({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 600,
-          child: ListView.builder(
-            itemCount: 3,
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (BuildContext context, int index) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 12.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    game.gameImage1,
-                    width: 400, // Ancho de cada captura
-                    fit: BoxFit.cover,
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 12,
+
+        children: [
+          Text(
+            'Imágenes',
+            style: textTheme.titleMedium,
+          ),
+
+          SizedBox(
+            height: 280,
+            child: ListView.builder(
+              itemCount: game.gameImages.length,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (BuildContext context, int index) {
+                final String gameImage = game.gameImages[index];
+                return GameImagesBuilder(gameImage: gameImage);
+              },
+            ),
+          ),
+
+          Text(
+            'Información',
+            style: textTheme.titleMedium,
+          ),
+
+          Chip(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            avatar: const Icon(Icons.business_rounded, size: 18),
+            label: Text(game.developer, style: textTheme.bodyMedium),
+            backgroundColor: colorScheme.surfaceContainerHigh,
+          ),
+
+          Chip(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            avatar: const Icon(Icons.calendar_today_rounded, size: 18),
+            label: Text(game.releaseYear, style: textTheme.bodyMedium),
+            backgroundColor: colorScheme.surfaceContainerHigh,
+          ),
+
+          Chip(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            avatar: const Icon(Icons.sports_esports_rounded, size: 18),
+            label: Text(game.plattform, style: textTheme.bodyMedium),
+            backgroundColor: colorScheme.surfaceContainerHigh,
+          ),
+
+          Text(
+            'Descripción',
+            style: textTheme.titleMedium,
+          ),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 18,
+            ),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    game.description,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      height: 1.4,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+}
 
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            game.developer,
-            style: textTheme.titleMedium,
-          ),
-        ),
+class GameImagesBuilder extends StatelessWidget {
+  const GameImagesBuilder({
+    super.key,
+    required this.gameImage,
+  });
 
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            game.releaseYear,
-            style: textTheme.titleMedium,
-          ),
-        ),
+  final String gameImage;
 
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            game.plattform,
-            style: textTheme.titleMedium,
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 12.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          gameImage,
+          fit: BoxFit.cover,
         ),
-      ],
+      ),
     );
   }
 }

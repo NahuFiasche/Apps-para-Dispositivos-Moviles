@@ -50,47 +50,62 @@ class GameLibraryBodyBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return ListView.builder(
       itemCount: gamesList.length,
       itemBuilder: (BuildContext context, int index) {
         final game = gamesList[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              16,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-
-          child: ListTile(
-            leading: SizedBox(
-              width: 50,
-              height: 70,
-              child: game.gameCover != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(game.gameCover!),
-                    )
-                  : const Icon(Icons.movie),
-            ),
-            title: Text(
-              game.title,
-              style: textTheme.titleMedium,
-            ),
-            subtitle: Text(
-              game.developer,
-              style: textTheme.titleSmall,
-            ),
-
-            onTap: () {
-              context.pushNamed(GameDetailScreen.name, extra: game);
-            },
-          ),
-        );
+        return GamesListBuilder(game: game);
       },
+    );
+  }
+}
+
+class GamesListBuilder extends StatelessWidget {
+  final Game game;
+
+  const new({
+    super.key,
+    required this.game,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(
+          16,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+
+      child: ListTile(
+        leading: SizedBox(
+          width: 50,
+          height: 70,
+          child: game.gameCover != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(game.gameCover!),
+                )
+              : const Icon(Icons.movie),
+        ),
+        title: Text(
+          game.title,
+          style: textTheme.titleMedium,
+        ),
+        subtitle: Text(
+          game.developer,
+          style: textTheme.titleSmall,
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+
+        onTap: () {
+          context.pushNamed(GameDetailScreen.name, extra: game);
+        },
+      ),
     );
   }
 }
