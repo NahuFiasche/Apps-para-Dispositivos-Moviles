@@ -51,7 +51,7 @@ class GameDetailBodyBuilder extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemBuilder: (BuildContext context, int index) {
                 final String gameImage = game.gameImages[index];
-                return GameImagesBuilder(gameImage: gameImage);
+                return GameScreenshots(gameScreenshot: gameImage);
               },
             ),
           ),
@@ -125,13 +125,13 @@ class GameDetailBodyBuilder extends StatelessWidget {
   }
 }
 
-class GameImagesBuilder extends StatelessWidget {
-  const GameImagesBuilder({
+class GameScreenshots extends StatelessWidget {
+  const GameScreenshots({
     super.key,
-    required this.gameImage,
+    required this.gameScreenshot,
   });
 
-  final String gameImage;
+  final String gameScreenshot;
 
   @override
   Widget build(BuildContext context) {
@@ -139,11 +139,38 @@ class GameImagesBuilder extends StatelessWidget {
       padding: const EdgeInsets.only(right: 12.0),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Image.network(
-          gameImage,
-          fit: BoxFit.cover,
-        ),
+        child: getGameImage(),
       ),
+    );
+  }
+
+  Widget getGameImage() {
+    return Image.network(
+      gameScreenshot,
+      fit: BoxFit.cover,
+
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+            ),
+          ),
+        );
+      },
+
+      errorBuilder: (context, error, stackTrace) {
+        return const Center(
+          child: Icon(
+            Icons.broken_image_rounded,
+            size: 32,
+            color: Colors.grey,
+          ),
+        );
+      },
     );
   }
 }
