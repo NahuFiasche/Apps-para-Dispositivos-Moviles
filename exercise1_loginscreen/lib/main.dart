@@ -1,4 +1,4 @@
-import 'package:exercise1_loginscreen/core/router.dart';
+import 'package:exercise1_loginscreen/core/router/router.dart';
 import 'package:flutter/material.dart';
 
 void main() {

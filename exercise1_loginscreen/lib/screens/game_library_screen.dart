@@ -2,6 +2,7 @@ import 'package:exercise1_loginscreen/core/data/games_datasource.dart';
 import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:exercise1_loginscreen/screens/game_detail_screen.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
+import 'package:exercise1_loginscreen/core/widgets/drawer_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,8 +39,10 @@ class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final scafoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: scafoldKey,
       appBar: AppBar(
         centerTitle: true,
         title: Text(
@@ -64,6 +67,7 @@ class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
               username: widget.username,
               gamesList: _gamesList,
             ),
+      drawer: DrawerMenu(scaffoldkey: scafoldKey),
     );
   }
 }
