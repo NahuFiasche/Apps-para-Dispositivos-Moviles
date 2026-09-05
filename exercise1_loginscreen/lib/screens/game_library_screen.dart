@@ -3,6 +3,7 @@ import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:exercise1_loginscreen/screens/game_detail_screen.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
 import 'package:exercise1_loginscreen/core/widgets/drawer_menu.dart';
+import 'package:exercise1_loginscreen/core/widgets/floating_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,6 +20,7 @@ class GamesLibraryScreen extends StatefulWidget {
 class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
   bool _isLoading = true;
   List<Game> _gamesList = [];
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -27,7 +29,7 @@ class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
   }
 
   Future<void> _loadGames() async {
-    // Simula el tiempo que tarda en consultar y traer la lista completa (2 segundos)
+    // Simula el tiempo que tarda en consultar y traer la lista completa (0.5 segundos)
     await Future.delayed(const Duration(milliseconds: 500));
 
     setState(() {
@@ -38,26 +40,23 @@ class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final scafoldKey = GlobalKey<ScaffoldState>();
-
     return Scaffold(
-      key: scafoldKey,
+      key: _scaffoldKey,
       appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          'Catálogo de Juegos',
-          style: textTheme.titleLarge,
-        ),
+        title: const Text('Catálogo de Juegos'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Cerrar Sesión',
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Cerrar sesión',
             onPressed: () {
               context.goNamed(LoginScreen.name);
             },
           ),
         ],
+      ),
+      drawer: DrawerMenu(
+        scaffoldkey: _scaffoldKey,
+        username: widget.username,
       ),
       body: _isLoading
           ? const Center(
@@ -67,7 +66,7 @@ class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
               username: widget.username,
               gamesList: _gamesList,
             ),
-      drawer: DrawerMenu(scaffoldkey: scafoldKey),
+      floatingActionButton: FloatingButton(),
     );
   }
 }
@@ -84,8 +83,10 @@ class GameLibrary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       itemCount: gamesList.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (BuildContext context, int index) {
         final game = gamesList[index];
         return GameItem(game: game);
@@ -105,34 +106,38 @@ class GameItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          16,
-        ),
-      ),
       clipBehavior: Clip.antiAlias,
-
+      elevation: 0,
+      color: colorScheme.surfaceContainerHighest,
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         leading: SizedBox(
-          width: 50,
-          height: 70,
+          width: 48,
+          height: 72,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: getGameCover(),
+            child: getGameCover(colorScheme.onSurfaceVariant),
           ),
         ),
         title: Text(
           game.title,
           style: textTheme.titleMedium,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
           game.developer,
-          style: textTheme.titleSmall,
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: colorScheme.onSurfaceVariant,
+        ),
 
         onTap: () {
           context.pushNamed(GameDetailScreen.name, extra: game);
@@ -141,12 +146,12 @@ class GameItem extends StatelessWidget {
     );
   }
 
-  Widget getGameCover() {
+  Widget getGameCover(Color errorColor) {
     if (game.gameCover == null) {
       return Icon(
         Icons.broken_image_rounded,
         size: 32,
-        color: Colors.grey,
+        color: errorColor,
       );
     } else {
       return Image.network(
@@ -167,11 +172,11 @@ class GameItem extends StatelessWidget {
         },
 
         errorBuilder: (context, error, stackTrace) {
-          return const Center(
+          return Center(
             child: Icon(
               Icons.broken_image_rounded,
               size: 32,
-              color: Colors.grey,
+              color: errorColor,
             ),
           );
         },

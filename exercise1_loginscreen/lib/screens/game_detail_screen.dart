@@ -9,13 +9,9 @@ class GameDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(game.title),
-        centerTitle: true,
-        titleTextStyle: textTheme.headlineSmall,
+        title: Text(game.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
       body: GameDetailBodyBuilder(game: game),
     );
@@ -32,95 +28,105 @@ class GameDetailBodyBuilder extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      children: [
+        _SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
+
+        SizedBox(
+          height: 280,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: game.gameImages.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (BuildContext context, int index) {
+              final String gameImage = game.gameImages[index];
+              return GameScreenshots(gameScreenshot: gameImage);
+            },
+          ),
+        ),
+
+        _SectionLabel(text: 'Información', colorScheme: colorScheme),
+
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _InfoChip(
+              icon: Icons.business_rounded,
+              label: game.developer,
+            ),
+            _InfoChip(
+              icon: Icons.calendar_today_rounded,
+              label: game.releaseYear,
+            ),
+            _InfoChip(
+              icon: Icons.sports_esports_rounded,
+              label: game.plattform,
+            ),
+          ],
+        ),
+
+        _SectionLabel(text: 'Descripción', colorScheme: colorScheme),
+
+        Card(
+          elevation: 0,
+          color: colorScheme.surfaceContainerHigh,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              game.description,
+              style: textTheme.bodyMedium?.copyWith(
+                height: 1.4,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+
+        
+      ],
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  final ColorScheme colorScheme;
+
+  const _SectionLabel({required this.text, required this.colorScheme});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 12,
-
-        children: [
-          Text(
-            'Imágenes',
-            style: textTheme.titleMedium,
-          ),
-
-          SizedBox(
-            height: 280,
-            child: ListView.builder(
-              itemCount: game.gameImages.length,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (BuildContext context, int index) {
-                final String gameImage = game.gameImages[index];
-                return GameScreenshots(gameScreenshot: gameImage);
-              },
-            ),
-          ),
-
-          Text(
-            'Información',
-            style: textTheme.titleMedium,
-          ),
-
-          Chip(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            avatar: const Icon(Icons.business_rounded, size: 18),
-            label: Text(game.developer, style: textTheme.bodyMedium),
-            backgroundColor: colorScheme.surfaceContainerHigh,
-          ),
-
-          Chip(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            avatar: const Icon(Icons.calendar_today_rounded, size: 18),
-            label: Text(game.releaseYear, style: textTheme.bodyMedium),
-            backgroundColor: colorScheme.surfaceContainerHigh,
-          ),
-
-          Chip(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            avatar: const Icon(Icons.sports_esports_rounded, size: 18),
-            label: Text(game.plattform, style: textTheme.bodyMedium),
-            backgroundColor: colorScheme.surfaceContainerHigh,
-          ),
-
-          Text(
-            'Descripción',
-            style: textTheme.titleMedium,
-          ),
-
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 18,
-            ),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    game.description,
-                    style: textTheme.bodyMedium?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      height: 1.4,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _InfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Chip(
+      avatar: Icon(icon, size: 18, color: colorScheme.primary),
+      label: Text(label, style: textTheme.bodyMedium),
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      side: BorderSide.none,
     );
   }
 }
