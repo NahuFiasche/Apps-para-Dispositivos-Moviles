@@ -163,14 +163,12 @@ class _LoginBodyBuilderState extends State<LoginBodyBuilder> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
           width: 320,
           content: const Text('Usuario y/o contraseña incorrectos'),
           backgroundColor: Theme.of(context).colorScheme.inverseSurface,
-          action: SnackBarAction(
-            label: 'OK',
-            onPressed: () {},
-          ),
+          
         ),
       );
     }

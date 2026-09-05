@@ -13,15 +13,15 @@ class GameDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(game.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
-      body: GameDetailBodyBuilder(game: game),
+      body: _GameDetailBody(game: game),
     );
   }
 }
 
-class GameDetailBodyBuilder extends StatelessWidget {
+class _GameDetailBody extends StatelessWidget {
   final Game game;
 
-  const GameDetailBodyBuilder({super.key, required this.game});
+  const _GameDetailBody({required this.game});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class GameDetailBodyBuilder extends StatelessWidget {
             separatorBuilder: (context, index) => const SizedBox(width: 12),
             itemBuilder: (BuildContext context, int index) {
               final String gameImage = game.gameImages[index];
-              return GameScreenshots(gameScreenshot: gameImage);
+              return _GameScreenshots(gameScreenshot: gameImage);
             },
           ),
         ),
@@ -84,7 +84,81 @@ class GameDetailBodyBuilder extends StatelessWidget {
           ),
         ),
 
-        
+        _SectionLabel(text: 'Configuración', colorScheme: colorScheme),
+
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton.tonalIcon(
+                label: const Text('Editar'),
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () {},
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: TextButton.icon(
+                label: Text('Borrar'),
+                icon: Icon(Icons.delete_outlined),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colorScheme.error,
+                  side: BorderSide(color: colorScheme.error),
+                ),
+                onPressed: (() {
+                  showDialog(
+                    barrierDismissible: false,
+                    context: context,
+                    builder: (BuildContext context) {
+                      return PopScope(
+                        canPop: false,
+                        child: AlertDialog(
+                          icon: Icon(
+                            Icons.delete_forever_rounded,
+                            color: colorScheme.error,
+                            size: 32,
+                          ),
+                          title: Text(
+                            '¿Eliminar Juego?',
+                            textAlign: TextAlign.center,
+                            style: textTheme.headlineSmall,
+                          ),
+                          content: Text(
+                            'La acción de eliminar un Juego no se puede deshacer.',
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant, 
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: (() {
+                                Navigator.of(context).pop();
+                              }),
+                              child: const Text('Cancelar'),
+                            ),
+
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colorScheme.error,
+                                foregroundColor: colorScheme.onError,
+                              ),
+                              onPressed: (() {
+                                Navigator.of(context).pop();
+                              }),
+                              child: const Text('Borrar'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -131,9 +205,8 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-class GameScreenshots extends StatelessWidget {
-  const GameScreenshots({
-    super.key,
+class _GameScreenshots extends StatelessWidget {
+  const _GameScreenshots({
     required this.gameScreenshot,
   });
 
