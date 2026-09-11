@@ -1,14 +1,29 @@
+import 'package:exercise1_loginscreen/screens/game_edit_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:exercise1_loginscreen/entities/games.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:exercise1_loginscreen/providers/games_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:collection/collection.dart';
 
-class GameDetailScreen extends StatelessWidget {
+class GameDetailScreen extends ConsumerWidget {
   static const String name = 'gameDetail_screen';
-  final Game game;
+  final String gameId;
 
-  const GameDetailScreen({super.key, required this.game});
+  const GameDetailScreen({super.key, required this.gameId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final List<Game> gamesList = ref.watch(gamesProvider);
+
+    final game = gamesList.firstWhereOrNull(
+      (game) => game.id == gameId,
+    );
+
+    if (game == null) {
+      return Placeholder();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(game.title, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -92,74 +107,103 @@ class _GameDetailBody extends StatelessWidget {
               child: FilledButton.tonalIcon(
                 label: const Text('Editar'),
                 icon: const Icon(Icons.edit_outlined),
-                onPressed: () {},
+                onPressed: () {
+                  context.pushNamed(GameEditScreen.name, extra: game);
+                },
               ),
             ),
 
             const SizedBox(width: 12),
 
             Expanded(
-              child: TextButton.icon(
-                label: Text('Borrar'),
-                icon: Icon(Icons.delete_outlined),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.error,
-                  side: BorderSide(color: colorScheme.error),
-                ),
-                onPressed: (() {
-                  showDialog(
-                    barrierDismissible: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return PopScope(
-                        canPop: false,
-                        child: AlertDialog(
-                          icon: Icon(
-                            Icons.delete_forever_rounded,
-                            color: colorScheme.error,
-                            size: 32,
-                          ),
-                          title: Text(
-                            '¿Eliminar Juego?',
-                            textAlign: TextAlign.center,
-                            style: textTheme.headlineSmall,
-                          ),
-                          content: Text(
-                            'La acción de eliminar un Juego no se puede deshacer.',
-                            textAlign: TextAlign.center,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant, 
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: (() {
-                                Navigator.of(context).pop();
-                              }),
-                              child: const Text('Cancelar'),
-                            ),
-
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: colorScheme.error,
-                                foregroundColor: colorScheme.onError,
-                              ),
-                              onPressed: (() {
-                                Navigator.of(context).pop();
-                              }),
-                              child: const Text('Borrar'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                }),
+              child: _DeleteButton(
+                colorScheme: colorScheme,
+                textTheme: textTheme,
+                game: game,
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _DeleteButton extends ConsumerWidget {
+  const _DeleteButton({
+    required this.colorScheme,
+    required this.textTheme,
+    required this.game,
+  });
+
+  final ColorScheme colorScheme;
+  final TextTheme textTheme;
+  final Game game;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return TextButton.icon(
+      label: Text('Borrar'),
+      icon: Icon(Icons.delete_outlined),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: colorScheme.error,
+        side: BorderSide(color: colorScheme.error),
+      ),
+      onPressed: (() {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (BuildContext context) {
+            return PopScope(
+              canPop: false,
+
+              child: AlertDialog(
+                icon: Icon(
+                  Icons.delete_forever_rounded,
+                  color: colorScheme.error,
+                  size: 32,
+                ),
+
+                title: Text(
+                  '¿Eliminar Juego?',
+                  textAlign: TextAlign.center,
+                  style: textTheme.headlineSmall,
+                ),
+
+                content: Text(
+                  'La acción de eliminar un Juego no se puede deshacer.',
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+
+                actions: [
+                  TextButton(
+                    onPressed: (() {
+                      Navigator.of(context).pop();
+                    }),
+                    child: const Text('Cancelar'),
+                  ),
+
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colorScheme.error,
+                      foregroundColor: colorScheme.onError,
+                    ),
+                    onPressed: (() {
+                      ref.read(gamesProvider.notifier).deleteGame(game.id);
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    }),
+                    child: const Text('Borrar'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }

@@ -1,10 +1,11 @@
-import 'package:exercise1_loginscreen/core/data/games_datasource.dart';
+import 'package:exercise1_loginscreen/providers/games_provider.dart';
 import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:exercise1_loginscreen/screens/game_detail_screen.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
-import 'package:exercise1_loginscreen/core/widgets/drawer_menu.dart';
-import 'package:exercise1_loginscreen/core/widgets/floating_button.dart';
+import 'package:exercise1_loginscreen/widgets/drawer_menu.dart';
+import 'package:exercise1_loginscreen/widgets/floating_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class GamesLibraryScreen extends StatefulWidget {
@@ -19,7 +20,6 @@ class GamesLibraryScreen extends StatefulWidget {
 
 class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
   bool _isLoading = true;
-  List<Game> _gamesList = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -33,7 +33,6 @@ class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
 
     setState(() {
-      _gamesList = gamesDatasource;
       _isLoading = false;
     });
   }
@@ -64,25 +63,24 @@ class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
             )
           : GameLibrary(
               username: widget.username,
-              gamesList: _gamesList,
             ),
       floatingActionButton: FloatingButton(),
     );
   }
 }
 
-class GameLibrary extends StatelessWidget {
+class GameLibrary extends ConsumerWidget {
   final String username;
-  final List<Game> gamesList;
 
   const GameLibrary({
     super.key,
     required this.username,
-    required this.gamesList,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final List<Game> gamesList = ref.watch(gamesProvider);
+
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       itemCount: gamesList.length,
@@ -140,7 +138,7 @@ class GameItem extends StatelessWidget {
         ),
 
         onTap: () {
-          context.pushNamed(GameDetailScreen.name, extra: game);
+          context.pushNamed(GameDetailScreen.name, extra: game.id);
         },
       ),
     );

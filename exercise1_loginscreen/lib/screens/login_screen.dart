@@ -1,5 +1,5 @@
 import 'package:exercise1_loginscreen/screens/game_library_screen.dart';
-import 'package:exercise1_loginscreen/core/data/users_credentials.dart';
+import 'package:exercise1_loginscreen/data/users_credentials.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
