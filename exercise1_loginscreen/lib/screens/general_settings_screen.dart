@@ -1,11 +1,7 @@
+import 'package:exercise1_loginscreen/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
-
-enum Idioma {
-  ingles,
-  espaniol,
-  frances,
-  portugues,
-}
+import 'package:exercise1_loginscreen/widgets/section_label.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class GeneralSettingsScreen extends StatelessWidget {
   static const String name = 'generalSettings_screen';
@@ -18,81 +14,93 @@ class GeneralSettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Configuración'),
       ),
-      body: const GeneralSettingsBody(),
+      body: _GeneralSettingsBody(),
     );
   }
 }
 
-class GeneralSettingsBody extends StatefulWidget {
-  const GeneralSettingsBody({super.key});
-
+class _GeneralSettingsBody extends ConsumerWidget {
   @override
-  State<GeneralSettingsBody> createState() => _GeneralSettingsBodyState();
-}
-
-class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
-  Idioma idiomaSeleccionado = Idioma.espaniol;
-  bool darkTheme = true;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final ThemeMode themeMode = ref.watch(themeProvider).themeMode;
+    final Color currentSeedColor = ref.watch(themeProvider).seedColor;
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
-        _SectionHeader(text: 'General', colorScheme: colorScheme),
+        SectionLabel(text: 'General', colorScheme: colorScheme),
 
         Card(
           margin: const EdgeInsets.only(bottom: 24),
           clipBehavior: Clip.antiAlias,
           child: SwitchListTile(
             secondary: Icon(
-              darkTheme ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              themeMode == ThemeMode.dark
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
               color: colorScheme.primary,
             ),
-            title: const Text('Tema oscuro'),
+            title: const Text('Tema Oscuro'),
             subtitle: Text(
               'Ajusta la apariencia de la aplicación',
               style: textTheme.bodySmall,
             ),
-            value: darkTheme,
+            value: themeMode == ThemeMode.dark,
             onChanged: (bool? newValue) {
-              if (newValue != null) {
-                setState(() => darkTheme = newValue);
-              }
+              ref.read(themeProvider.notifier).toggleTheme();
             },
           ),
         ),
 
-        _SectionHeader(text: 'Idioma', colorScheme: colorScheme),
+        SectionLabel(text: 'Color principal', colorScheme: colorScheme),
 
         Card(
           margin: const EdgeInsets.only(bottom: 24),
           clipBehavior: Clip.antiAlias,
-          child: RadioGroup<Idioma>(
-            groupValue: idiomaSeleccionado,
-            onChanged: (Idioma? nuevoValor) {
-              if (nuevoValor != null) {
-                setState(() => idiomaSeleccionado = nuevoValor);
-              }
+          child: RadioGroup<Color>(
+            groupValue: currentSeedColor,
+            onChanged: (Color? newColor) {
+              ref.read(themeProvider.notifier).changeSeedColor(newColor!);
             },
             child: Column(
               children: [
-                for (final idioma in Idioma.values)
-                  RadioListTile<Idioma>(
-                    secondary: Icon(
-                      _iconoIdioma(idioma),
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    title: Text(_nombreIdioma(idioma)),
-                    subtitle: Text(
-                      _nombreNativoIdioma(idioma),
-                      style: textTheme.bodySmall,
-                    ),
-                    value: idioma,
+                RadioListTile<Color>(
+                  secondary: const Icon(
+                    Icons.circle,
+                    color: Colors.blue,
                   ),
+                  title: const Text('Azul'),
+                  value: Colors.blue,
+                ),
+
+                RadioListTile<Color>(
+                  secondary: const Icon(
+                    Icons.circle,
+                    color: Colors.green,
+                  ),
+                  title: const Text('Verde'),
+                  value: Colors.green,
+                ),
+
+                RadioListTile<Color>(
+                  secondary: const Icon(
+                    Icons.circle,
+                    color: Colors.deepPurple,
+                  ),
+                  title: const Text('Violeta'),
+                  value: Colors.deepPurple,
+                ),
+
+                RadioListTile<Color>(
+                  secondary: const Icon(
+                    Icons.circle,
+                    color: Colors.deepOrange,
+                  ),
+                  title: const Text('Naranja'),
+                  value: Colors.deepOrange,
+                ),
               ],
             ),
           ),
@@ -109,69 +117,6 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
           ),
         ),
       ],
-    );
-  }
-
-  String _nombreIdioma(Idioma idioma) {
-    switch (idioma) {
-      case Idioma.espaniol:
-        return 'Español';
-      case Idioma.ingles:
-        return 'Inglés';
-      case Idioma.frances:
-        return 'Francés';
-      case Idioma.portugues:
-        return 'Portugués';
-    }
-  }
-
-  String _nombreNativoIdioma(Idioma idioma) {
-    switch (idioma) {
-      case Idioma.espaniol:
-        return 'Español (España)';
-      case Idioma.ingles:
-        return 'English (US)';
-      case Idioma.frances:
-        return 'Français (France)';
-      case Idioma.portugues:
-        return 'Português (Brasil)';
-    }
-  }
-
-  IconData _iconoIdioma(Idioma idioma) {
-    switch (idioma) {
-      case Idioma.espaniol:
-        return Icons.language;
-      case Idioma.ingles:
-        return Icons.language;
-      case Idioma.frances:
-        return Icons.language;
-      case Idioma.portugues:
-        return Icons.language;
-    }
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String text;
-  final ColorScheme colorScheme;
-
-  const _SectionHeader({
-    required this.text,
-    required this.colorScheme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 }

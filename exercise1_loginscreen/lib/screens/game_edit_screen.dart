@@ -3,6 +3,8 @@ import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:exercise1_loginscreen/widgets/section_label.dart';
+
 
 class GameEditScreen extends StatelessWidget {
   static const String name = 'editGame_screen';
@@ -25,7 +27,9 @@ class _EditScreenBody extends ConsumerStatefulWidget {
   const _EditScreenBody({required this.game});
 
   @override
-  ConsumerState<_EditScreenBody> createState() => _EditScreenBodyState();
+  ConsumerState<_EditScreenBody> createState() {
+    return _EditScreenBodyState();
+  }
 }
 
 class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
@@ -51,7 +55,7 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          _SectionLabel(text: 'Información', colorScheme: colorScheme),
+          SectionLabel(text: 'Información', colorScheme: colorScheme),
 
           _EditField(
             labelText: 'Título',
@@ -94,7 +98,7 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
             onSaved: (value) => _plattform = value!.trim(),
           ),
 
-          _SectionLabel(text: 'Descripción', colorScheme: colorScheme),
+          SectionLabel(text: 'Descripción', colorScheme: colorScheme),
 
           _EditField(
             labelText: 'Descripción del juego',
@@ -107,7 +111,7 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
             onSaved: (value) => _description = value!.trim(),
           ),
 
-          _SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
+          SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
 
           _EditField(
             labelText: 'URL de la portada',
@@ -157,7 +161,7 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
   }
 
   void _saveChanges(BuildContext context) {
-    if (_formKey.currentState!.validate() == false) {
+    if (_formKey.currentState?.validate() == false) {
       return;
     }
 
@@ -179,26 +183,6 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  final ColorScheme colorScheme;
-
-  const _SectionLabel({required this.text, required this.colorScheme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
 
 class _EditField extends StatelessWidget {
   final String labelText;

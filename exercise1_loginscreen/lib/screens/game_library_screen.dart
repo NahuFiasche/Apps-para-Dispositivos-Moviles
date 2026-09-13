@@ -8,39 +8,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class GamesLibraryScreen extends StatefulWidget {
+class GamesLibraryScreen extends ConsumerWidget {
   static const String name = 'gamesLibrary_screen';
   final String username;
 
   const GamesLibraryScreen({super.key, this.username = 'Undefined username'});
 
   @override
-  State<GamesLibraryScreen> createState() => _GamesLibraryScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+    final AsyncValue<List<Game>> gamesList = ref.watch(gamesProvider);
 
-class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
-  bool _isLoading = true;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadGames();
-  }
-
-  Future<void> _loadGames() async {
-    // Simula el tiempo que tarda en consultar y traer la lista completa (0.5 segundos)
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
+      key: scaffoldKey,
       appBar: AppBar(
         title: const Text('Catálogo de Juegos'),
         actions: [
@@ -53,51 +33,59 @@ class _GamesLibraryScreenState extends State<GamesLibraryScreen> {
           ),
         ],
       ),
+
       drawer: DrawerMenu(
-        scaffoldkey: _scaffoldKey,
-        username: widget.username,
+        scaffoldkey: scaffoldKey,
+        username: username,
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : GameLibrary(
-              username: widget.username,
-            ),
+
+      body: gamesList.when(
+        data: (gamesList) {
+          return _GameLibrary(
+            username: username,
+            gamesList: gamesList,
+          );
+        },
+
+        error: (error, stackTrace) {
+          return Center(child: Text('Error al cargar Juegos: $error'));
+        },
+
+        loading: () {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      ),
+
       floatingActionButton: FloatingButton(),
     );
   }
 }
 
-class GameLibrary extends ConsumerWidget {
+class _GameLibrary extends ConsumerWidget {
   final String username;
+  final List<Game> gamesList;
 
-  const GameLibrary({
-    super.key,
-    required this.username,
-  });
+  const _GameLibrary({required this.username, required this.gamesList});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final List<Game> gamesList = ref.watch(gamesProvider);
-
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       itemCount: gamesList.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (BuildContext context, int index) {
-        final game = gamesList[index];
-        return GameItem(game: game);
+        return _GameItem(game: gamesList[index]);
       },
     );
   }
 }
 
-class GameItem extends StatelessWidget {
+class _GameItem extends StatelessWidget {
   final Game game;
 
-  const GameItem({
-    super.key,
+  const _GameItem({
     required this.game,
   });
 

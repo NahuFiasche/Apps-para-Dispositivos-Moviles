@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:exercise1_loginscreen/providers/games_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:collection/collection.dart';
+import 'package:exercise1_loginscreen/widgets/section_label.dart';
 
 class GameDetailScreen extends ConsumerWidget {
   static const String name = 'gameDetail_screen';
@@ -14,7 +15,7 @@ class GameDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final List<Game> gamesList = ref.watch(gamesProvider);
+    final List<Game> gamesList = ref.watch(gamesProvider).requireValue;
 
     final game = gamesList.firstWhereOrNull(
       (game) => game.id == gameId,
@@ -44,9 +45,9 @@ class _GameDetailBody extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
-        _SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
+        SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
 
         SizedBox(
           height: 280,
@@ -61,7 +62,7 @@ class _GameDetailBody extends StatelessWidget {
           ),
         ),
 
-        _SectionLabel(text: 'Información', colorScheme: colorScheme),
+        SectionLabel(text: 'Información', colorScheme: colorScheme),
 
         Wrap(
           spacing: 8,
@@ -82,7 +83,7 @@ class _GameDetailBody extends StatelessWidget {
           ],
         ),
 
-        _SectionLabel(text: 'Descripción', colorScheme: colorScheme),
+        SectionLabel(text: 'Descripción', colorScheme: colorScheme),
 
         Card(
           elevation: 0,
@@ -99,7 +100,7 @@ class _GameDetailBody extends StatelessWidget {
           ),
         ),
 
-        _SectionLabel(text: 'Configuración', colorScheme: colorScheme),
+        SectionLabel(text: 'Configuración', colorScheme: colorScheme),
 
         Row(
           children: [
@@ -204,27 +205,6 @@ class _DeleteButton extends ConsumerWidget {
           },
         );
       }),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  final ColorScheme colorScheme;
-
-  const _SectionLabel({required this.text, required this.colorScheme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 }
