@@ -1,6 +1,8 @@
+import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:exercise1_loginscreen/screens/game_library_screen.dart';
-import 'package:exercise1_loginscreen/data/users_credentials.dart';
+import 'package:exercise1_loginscreen/screens/user_add_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -18,24 +20,17 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-class LoginBodyBuilder extends StatefulWidget {
+class LoginBodyBuilder extends ConsumerStatefulWidget {
   const LoginBodyBuilder({super.key});
 
   @override
-  State<LoginBodyBuilder> createState() => _LoginBodyBuilderState();
+  ConsumerState<LoginBodyBuilder> createState() => _LoginBodyBuilderState();
 }
 
-class _LoginBodyBuilderState extends State<LoginBodyBuilder> {
+class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _obscurePassword = true;
-
-  @override
-  void dispose() {
-    usernameController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +97,6 @@ class _LoginBodyBuilderState extends State<LoginBodyBuilder> {
               obscureText: _obscurePassword,
               obscuringCharacter: '*',
               textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _login(context),
               decoration: InputDecoration(
                 labelText: 'Contraseña',
                 prefixIcon: const Icon(Icons.key_rounded),
@@ -122,15 +116,22 @@ class _LoginBodyBuilderState extends State<LoginBodyBuilder> {
               ),
             ),
 
+            const SizedBox(height: 8),
+
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
+                //TODO: Implementar nuevo Widget ForgotPasswordDialog
                 onPressed: () {},
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  visualDensity: VisualDensity.compact,
+                ),
                 child: const Text('¿Olvidaste tu contraseña?'),
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
@@ -148,6 +149,29 @@ class _LoginBodyBuilderState extends State<LoginBodyBuilder> {
                 ),
               ),
             ),
+
+            const SizedBox(height: 32),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '¿No tienes una cuenta?',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    context.pushNamed(UserAddScreen.name);
+                  },
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('Registrarse'),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -155,7 +179,16 @@ class _LoginBodyBuilderState extends State<LoginBodyBuilder> {
   }
 
   void _login(BuildContext context) {
-    if (validateLogin()) {
+    final username = usernameController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (ref
+            .read(usersProvider.notifier)
+            .validateLogin(
+              username,
+              password,
+            ) ==
+        true) {
       context.goNamed(
         GamesLibraryScreen.name,
         extra: usernameController.text,
@@ -168,17 +201,8 @@ class _LoginBodyBuilderState extends State<LoginBodyBuilder> {
           width: 320,
           content: const Text('Usuario y/o contraseña incorrectos'),
           backgroundColor: Theme.of(context).colorScheme.inverseSurface,
-          
         ),
       );
     }
-  }
-
-  bool validateLogin() {
-    return validUsers.any(
-      (user) =>
-          user['username'] == usernameController.text &&
-          user['password'] == passwordController.text,
-    );
   }
 }

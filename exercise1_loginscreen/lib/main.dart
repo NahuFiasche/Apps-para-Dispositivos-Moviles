@@ -21,6 +21,7 @@ class MainApp extends ConsumerWidget {
       theme: mainAppTheme.themeLight,
       darkTheme: mainAppTheme.themeDark,
       themeMode: mainAppTheme.themeMode,
+      
     );
   }
 }

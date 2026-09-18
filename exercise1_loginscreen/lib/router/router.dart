@@ -6,6 +6,8 @@ import 'package:exercise1_loginscreen/screens/general_settings_screen.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
 import 'package:exercise1_loginscreen/screens/game_detail_screen.dart';
 import 'package:exercise1_loginscreen/screens/user_settings_screen.dart';
+import 'package:exercise1_loginscreen/screens/user_add_screen.dart';
+import 'package:exercise1_loginscreen/screens/user_edit_screen.dart';
 
 import 'package:go_router/go_router.dart';
 
@@ -48,6 +50,17 @@ final appRouter = GoRouter(
       name: GameEditScreen.name,
       path: '/editGame_screen',
       builder: (context, state) => GameEditScreen(game: state.extra as Game),
+    ),
+    GoRoute(
+      name: UserAddScreen.name,
+      path: '/addUser_screen',
+      builder: (context, state) => UserAddScreen(),
+    ),
+    GoRoute(
+      name: UserEditScreen.name,
+      path: '/editUser_screen',
+      builder: (context, state) =>
+          UserEditScreen(username: state.extra as String),
     ),
   ],
 );

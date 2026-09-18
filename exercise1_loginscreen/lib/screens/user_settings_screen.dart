@@ -1,4 +1,5 @@
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
+import 'package:exercise1_loginscreen/screens/user_edit_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -57,7 +58,10 @@ class UserSettingsBody extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     FilledButton.tonal(
-                      onPressed: () {},
+                      onPressed: () => context.pushNamed(
+                        UserEditScreen.name,
+                        extra: username,
+                      ),
                       child: const Text('Editar perfil'),
                     ),
                   ],

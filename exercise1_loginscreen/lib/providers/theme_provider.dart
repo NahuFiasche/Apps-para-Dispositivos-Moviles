@@ -20,6 +20,12 @@ class ThemeNotifier extends Notifier<AppTheme> {
       seedColor: seedColor,
       themeLight: ThemeData(
         useMaterial3: true,
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,
           brightness: Brightness.light,
@@ -27,6 +33,12 @@ class ThemeNotifier extends Notifier<AppTheme> {
       ),
       themeDark: ThemeData(
         useMaterial3: true,
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,
           brightness: Brightness.dark,
