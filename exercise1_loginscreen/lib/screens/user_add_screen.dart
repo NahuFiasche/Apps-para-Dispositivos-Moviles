@@ -158,9 +158,9 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          behavior: SnackBarBehavior.floating,
+          behavior: Theme.of(context).snackBarTheme.behavior,
           shape: Theme.of(context).snackBarTheme.shape,
-          backgroundColor: Colors.green.shade800,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
           content: Row(
             children: [
               const Icon(Icons.check_circle_outline, color: Colors.white),
