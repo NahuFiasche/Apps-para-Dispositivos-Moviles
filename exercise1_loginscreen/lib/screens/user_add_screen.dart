@@ -12,7 +12,7 @@ class UserAddScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Agregar Usuario')),
+      appBar: AppBar(title: const Text('Registrar Usuario')),
       body: _AddUserBody(),
     );
   }
@@ -33,6 +33,9 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +79,17 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
             colorScheme: colorScheme,
             controller: _newPasswordController,
             validator: _requiredValidator,
-            obscureText: true,
+            obscureText: _obscureNewPassword,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureNewPassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+              onPressed: () => setState(
+                () => _obscureNewPassword = !_obscureNewPassword,
+              ),
+            ),
           ),
 
           _AddUserField(
@@ -86,7 +99,17 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
             colorScheme: colorScheme,
             controller: _confirmPasswordController,
             validator: _confirmPasswordValidator,
-            obscureText: true,
+            obscureText: _obscureConfirmPassword,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+              onPressed: () => setState(
+                () => _obscureConfirmPassword = !_obscureConfirmPassword,
+              ),
+            ),
           ),
 
           const SizedBox(height: 24),
@@ -124,7 +147,7 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     }
   }
 
-  void _saveUser(BuildContext context) {
+  void _saveUser(BuildContext context) async {
     if (_formKey.currentState?.validate() == false) {
       return;
     }
@@ -133,7 +156,7 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     final String newMail = _newMailController.text.trim();
     final String newPassword = _newPasswordController.text.trim();
 
-    final String? returnString = ref
+    final String? returnString = await ref
         .read(usersProvider.notifier)
         .addUser(
           newMail: newMail,
@@ -141,6 +164,8 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
           newPassword: newPassword,
         );
 
+    if (!context.mounted) return;
+    
     if (returnString != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -156,25 +181,89 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: Theme.of(context).snackBarTheme.behavior,
-          shape: Theme.of(context).snackBarTheme.shape,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          content: Row(
+      context.pop();
+
+      _showUserInfo(userPassword: newPassword, username: newUsername);
+    }
+  }
+
+  void _showUserInfo({required String userPassword, required String username}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle_outline, color: Colors.white),
-              const SizedBox(width: 8),
+              Icon(
+                Icons.verified_rounded,
+                size: 48,
+                color: theme.colorScheme.primary,
+              ),
+
               Text(
-                'Usuario ${_newUsernameController.text.trim()} creado',
-                style: const TextStyle(color: Colors.white),
+                'Cuenta creada exitosamente',
+                style: theme.textTheme.titleMedium,
+              ),
+
+              const SizedBox(height: 12),
+              Text(
+                'Tu usuario es',
+                style: theme.textTheme.titleMedium,
+              ),
+
+              const SizedBox(height: 12),
+
+              SelectableText(
+                username,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              Text(
+                'Tu contraseña es',
+                style: theme.textTheme.titleMedium,
+              ),
+
+              const SizedBox(height: 8),
+
+              SelectableText(
+                userPassword,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Ok'),
+                ),
               ),
             ],
           ),
-        ),
-      );
-      context.pop();
-    }
+        );
+      },
+    );
   }
 }
 
@@ -184,6 +273,7 @@ class _AddUserField extends StatelessWidget {
   final TextTheme textTheme;
   final ColorScheme colorScheme;
   final bool obscureText;
+  final Widget? suffixIcon;
   final TextEditingController controller;
   final String? Function(String?)? validator;
 
@@ -194,6 +284,7 @@ class _AddUserField extends StatelessWidget {
     required this.colorScheme,
     required this.controller,
     this.obscureText = false,
+    this.suffixIcon,
     this.validator,
   });
 
@@ -209,6 +300,7 @@ class _AddUserField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: labelText,
           prefixIcon: Icon(icon, size: 20, color: colorScheme.primary),
+          suffixIcon: suffixIcon,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),

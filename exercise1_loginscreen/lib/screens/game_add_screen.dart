@@ -28,14 +28,14 @@ class _AddScreenBody extends ConsumerStatefulWidget {
 
 class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  //TODO: Implementar con TextFormController
-  String _title = '';
-  String _developer = '';
-  String _releaseYear = '';
-  String _plattform = '';
-  String _description = '';
-  String _gameCover = '';
-  List<String> _gameImages = [];
+
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _developerController = TextEditingController();
+  final TextEditingController _releaseYearController = TextEditingController();
+  final TextEditingController _plattformController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _gameCoverController = TextEditingController();
+  final TextEditingController _gameImagesController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +54,8 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
             icon: Icons.sports_esports_rounded,
             textTheme: textTheme,
             colorScheme: colorScheme,
+            controller: _titleController,
             validator: _requiredValidator,
-            onSaved: (value) => _title = value!.trim(),
           ),
 
           _EditField(
@@ -63,8 +63,8 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
             icon: Icons.business_rounded,
             textTheme: textTheme,
             colorScheme: colorScheme,
+            controller: _developerController,
             validator: _requiredValidator,
-            onSaved: (value) => _developer = value!.trim(),
           ),
 
           _EditField(
@@ -73,8 +73,8 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
             textTheme: textTheme,
             colorScheme: colorScheme,
             keyboardType: TextInputType.number,
+            controller: _releaseYearController,
             validator: _requiredValidator,
-            onSaved: (value) => _releaseYear = value!.trim(),
           ),
 
           _EditField(
@@ -82,8 +82,8 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
             icon: Icons.videogame_asset_rounded,
             textTheme: textTheme,
             colorScheme: colorScheme,
+            controller: _plattformController,
             validator: _requiredValidator,
-            onSaved: (value) => _plattform = value!.trim(),
           ),
 
           SectionLabel(text: 'Descripción', colorScheme: colorScheme),
@@ -94,8 +94,8 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
             textTheme: textTheme,
             colorScheme: colorScheme,
             maxLines: 5,
+            controller: _descriptionController,
             validator: _requiredValidator,
-            onSaved: (value) => _description = value!.trim(),
           ),
 
           SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
@@ -105,7 +105,7 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
             icon: Icons.image_rounded,
             textTheme: textTheme,
             colorScheme: colorScheme,
-            onSaved: (value) => _gameCover = value!.trim(),
+            controller: _gameCoverController,
           ),
 
           _EditField(
@@ -114,13 +114,7 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
             textTheme: textTheme,
             colorScheme: colorScheme,
             maxLines: 3,
-            onSaved: (value) {
-              _gameImages = value!
-                  .split(',')
-                  .map((String url) => url.trim())
-                  .where((String url) => url.isNotEmpty)
-                  .toList();
-            },
+            controller: _gameImagesController,
           ),
 
           const SizedBox(height: 24),
@@ -150,32 +144,25 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
       return;
     }
 
-    _formKey.currentState?.save();
-
-    final List<Game> gamesList = ref.read(gamesProvider).requireValue;
-
-    final Iterable<int> gameIdList = gamesList.map(
-      (game) => int.parse(game.id),
-    );
-
-    final int maxId = gameIdList.reduce(
-      (curr, next) => curr > next ? curr : next,
-    );
-
-    final String id = (maxId + 1).toString();
+    final List<String> gameImages = _gameImagesController.text
+        .split(',')
+        .map((String url) => url.trim())
+        .where((String url) => url.isNotEmpty)
+        .toList();
 
     final Game newGame = Game(
-      id: id,
-      title: _title,
-      developer: _developer,
-      releaseYear: _releaseYear,
-      plattform: _plattform,
-      description: _description,
-      gameCover: _gameCover,
-      gameImages: _gameImages,
+      id: '',
+      title: _titleController.text.trim(),
+      developer: _developerController.text.trim(),
+      releaseYear: _releaseYearController.text.trim(),
+      plattform: _plattformController.text.trim(),
+      description: _descriptionController.text.trim(),
+      gameCover: _gameCoverController.text.trim(),
+      gameImages: gameImages,
     );
 
     ref.read(gamesProvider.notifier).addGame(newGame);
+
     context.pop();
   }
 }
@@ -187,18 +174,18 @@ class _EditField extends StatelessWidget {
   final ColorScheme colorScheme;
   final int? maxLines;
   final TextInputType? keyboardType;
+  final TextEditingController controller;
   final String? Function(String?)? validator;
-  final Function(String?)? onSaved;
 
   const _EditField({
     required this.labelText,
     required this.icon,
     required this.textTheme,
     required this.colorScheme,
+    required this.controller,
     this.maxLines = 1,
     this.keyboardType,
     this.validator,
-    this.onSaved,
   });
 
   @override
@@ -206,10 +193,10 @@ class _EditField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
+        controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
         validator: validator,
-        onSaved: onSaved,
         style: textTheme.bodyMedium,
         decoration: InputDecoration(
           labelText: labelText,

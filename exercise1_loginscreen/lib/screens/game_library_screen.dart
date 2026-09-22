@@ -2,6 +2,7 @@ import 'package:exercise1_loginscreen/providers/games_provider.dart';
 import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:exercise1_loginscreen/screens/game_detail_screen.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
+import 'package:exercise1_loginscreen/widgets/confirmation_dialog.dart';
 import 'package:exercise1_loginscreen/widgets/drawer_menu.dart';
 import 'package:exercise1_loginscreen/widgets/floating_button.dart';
 import 'package:flutter/material.dart';
@@ -26,9 +27,20 @@ class GamesLibraryScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Cerrar sesión',
             onPressed: () {
-              context.goNamed(LoginScreen.name);
+              showDialog(
+                context: context,
+                builder: (dialogContext) {
+                  return ConfirmationDialog(
+                    title: '¿Cerrar Sesión?',
+                    message: 'Se cerrará la sesión de $username',
+                    actionButtonText: 'Cerrar',
+                    onDelete: () {
+                      context.goNamed(LoginScreen.name);
+                    },
+                  );
+                },
+              );
             },
           ),
         ],

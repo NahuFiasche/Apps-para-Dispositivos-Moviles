@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:exercise1_loginscreen/widgets/section_label.dart';
 
-
 class GameEditScreen extends StatelessWidget {
   static const String name = 'editGame_screen';
   final Game game;
@@ -34,16 +33,27 @@ class _EditScreenBody extends ConsumerStatefulWidget {
 
 class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  //TODO: Implementar con TextFormController
-  String _title = '';
-  String _developer = '';
-  String _releaseYear = '';
-  String _plattform = '';
-  String _description = '';
-  String _gameCover = '';
-  List<String> _gameImages = [];
 
   Game get game => widget.game;
+
+  late final TextEditingController _titleController = TextEditingController(
+    text: game.title,
+  );
+  late final TextEditingController _developerController = TextEditingController(
+    text: game.developer,
+  );
+  late final TextEditingController _releaseYearController =
+      TextEditingController(text: game.releaseYear);
+  late final TextEditingController _plattformController = TextEditingController(
+    text: game.plattform,
+  );
+  late final TextEditingController _descriptionController =
+      TextEditingController(text: game.description);
+  late final TextEditingController _gameCoverController = TextEditingController(
+    text: game.gameCover ?? '',
+  );
+  late final TextEditingController _gameImagesController =
+      TextEditingController(text: game.gameImages.join(', '));
 
   @override
   Widget build(BuildContext context) {
@@ -60,42 +70,38 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
           _EditField(
             labelText: 'Título',
             icon: Icons.sports_esports_rounded,
-            initialValue: game.title,
+            controller: _titleController,
             textTheme: textTheme,
             colorScheme: colorScheme,
             validator: _requiredValidator,
-            onSaved: (value) => _title = value!.trim(),
           ),
 
           _EditField(
             labelText: 'Desarrollador',
             icon: Icons.business_rounded,
-            initialValue: game.developer,
+            controller: _developerController,
             textTheme: textTheme,
             colorScheme: colorScheme,
             validator: _requiredValidator,
-            onSaved: (value) => _developer = value!.trim(),
           ),
 
           _EditField(
             labelText: 'Año de lanzamiento',
             icon: Icons.calendar_today_rounded,
-            initialValue: game.releaseYear,
+            controller: _releaseYearController,
             textTheme: textTheme,
             colorScheme: colorScheme,
             keyboardType: TextInputType.number,
             validator: _requiredValidator,
-            onSaved: (value) => _releaseYear = value!.trim(),
           ),
 
           _EditField(
             labelText: 'Plataforma',
             icon: Icons.videogame_asset_rounded,
-            initialValue: game.plattform,
+            controller: _plattformController,
             textTheme: textTheme,
             colorScheme: colorScheme,
             validator: _requiredValidator,
-            onSaved: (value) => _plattform = value!.trim(),
           ),
 
           SectionLabel(text: 'Descripción', colorScheme: colorScheme),
@@ -103,12 +109,11 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
           _EditField(
             labelText: 'Descripción del juego',
             icon: Icons.description_rounded,
-            initialValue: game.description,
+            controller: _descriptionController,
             textTheme: textTheme,
             colorScheme: colorScheme,
             maxLines: 5,
             validator: _requiredValidator,
-            onSaved: (value) => _description = value!.trim(),
           ),
 
           SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
@@ -116,26 +121,18 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
           _EditField(
             labelText: 'URL de la portada',
             icon: Icons.image_rounded,
-            initialValue: game.gameCover ?? '',
+            controller: _gameCoverController,
             textTheme: textTheme,
             colorScheme: colorScheme,
-            onSaved: (value) => _gameCover = value!.trim(),
           ),
 
           _EditField(
             labelText: 'URLs de capturas (separadas por coma)',
             icon: Icons.collections_rounded,
-            initialValue: game.gameImages.join(', '),
+            controller: _gameImagesController,
             textTheme: textTheme,
             colorScheme: colorScheme,
             maxLines: 3,
-            onSaved: (value) {
-              _gameImages = value!
-                  .split(',')
-                  .map((String url) => url.trim())
-                  .where((String url) => url.isNotEmpty)
-                  .toList();
-            },
           ),
 
           const SizedBox(height: 24),
@@ -165,17 +162,22 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
       return;
     }
 
-    _formKey.currentState?.save();
+    final String gameCover = _gameCoverController.text.trim();
+    final List<String> gameImages = _gameImagesController.text
+        .split(',')
+        .map((String url) => url.trim())
+        .where((String url) => url.isNotEmpty)
+        .toList();
 
     final Game updatedGame = Game(
       id: game.id,
-      title: _title,
-      developer: _developer,
-      releaseYear: _releaseYear,
-      plattform: _plattform,
-      description: _description,
-      gameCover: _gameCover.isEmpty ? null : _gameCover,
-      gameImages: _gameImages,
+      title: _titleController.text.trim(),
+      developer: _developerController.text.trim(),
+      releaseYear: _releaseYearController.text.trim(),
+      plattform: _plattformController.text.trim(),
+      description: _descriptionController.text.trim(),
+      gameCover: gameCover.isEmpty ? null : gameCover,
+      gameImages: gameImages,
     );
 
     ref.read(gamesProvider.notifier).updateGame(updatedGame);
@@ -183,28 +185,25 @@ class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
   }
 }
 
-
 class _EditField extends StatelessWidget {
   final String labelText;
   final IconData icon;
-  final String initialValue;
+  final TextEditingController controller;
   final TextTheme textTheme;
   final ColorScheme colorScheme;
   final int? maxLines;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
-  final Function(String?)? onSaved;
 
   const _EditField({
     required this.labelText,
     required this.icon,
-    required this.initialValue,
+    required this.controller,
     required this.textTheme,
     required this.colorScheme,
     this.maxLines = 1,
     this.keyboardType,
     this.validator,
-    this.onSaved,
   });
 
   @override
@@ -212,11 +211,10 @@ class _EditField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
-        initialValue: initialValue,
+        controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
         validator: validator,
-        onSaved: onSaved,
         style: textTheme.bodyMedium,
         decoration: InputDecoration(
           labelText: labelText,

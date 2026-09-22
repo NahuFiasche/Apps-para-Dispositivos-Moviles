@@ -1,36 +1,46 @@
+import 'package:exercise1_loginscreen/database_helpers/games_database_helper.dart';
 import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:exercise1_loginscreen/data/games_datasource.dart';
 
 class GamesNotifier extends AsyncNotifier<List<Game>> {
   @override
   Future<List<Game>> build() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    return gamesDatasource;
+    return await GamesDatabaseHelper.instance.getGames();
   }
 
-  Future addGame(Game newGame) async {
+  Future<void> addGame(Game newGame) async {
     state = await AsyncValue.guard(() async {
-      final currentList = state.value ?? [];
-      return [...currentList, newGame];
+      final currentGamesList = state.value ?? [];
+
+      int maxId = 0;
+      for (final game in currentGamesList) {
+        final parsedId = int.tryParse(game.id);
+        if (parsedId != null && parsedId > maxId) {
+          maxId = parsedId;
+        }
+      }
+      final String newId = (maxId + 1).toString();
+
+      newGame = newGame.copyWith(id: newId);
+
+      await GamesDatabaseHelper.instance.insertGame(newGame);
+
+      return await GamesDatabaseHelper.instance.getGames();
     });
   }
 
   Future updateGame(Game updatedGame) async {
     state = await AsyncValue.guard(() async {
-      final currentList = state.value ?? [];
-      return [
-        for (final game in currentList)
-          if (game.id == updatedGame.id) updatedGame else game,
-      ];
+      await GamesDatabaseHelper.instance.updateGame(updatedGame);
+
+      return await GamesDatabaseHelper.instance.getGames();
     });
   }
 
   Future deleteGame(String id) async {
     state = await AsyncValue.guard(() async {
-      final currentList = state.value ?? [];
-      return currentList.where((game) => game.id != id).toList();
+      await GamesDatabaseHelper.instance.deleteGame(id);
+      return await GamesDatabaseHelper.instance.getGames();
     });
   }
 }

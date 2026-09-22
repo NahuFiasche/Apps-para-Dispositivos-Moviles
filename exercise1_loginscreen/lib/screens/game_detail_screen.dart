@@ -15,21 +15,45 @@ class GameDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final List<Game> gamesList = ref.watch(gamesProvider).requireValue;
+    final AsyncValue<List<Game>> gamesListAsync = ref.watch(gamesProvider);
 
-    final game = gamesList.firstWhereOrNull(
-      (game) => game.id == gameId,
-    );
+    return gamesListAsync.when(
+      data: (gamesList) {
+        final game = gamesList.firstWhereOrNull(
+          (game) => game.id == gameId,
+        );
 
-    if (game == null) {
-      return Placeholder();
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(game.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      ),
-      body: _GameDetailBody(game: game),
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              game!.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          body: _GameDetailBody(game: game),
+        );
+      },
+      error: (error, stackTrace) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Error'),
+          ),
+          body: Center(
+            child: Text('Error al cargar el Juego: $error'),
+          ),
+        );
+      },
+      loading: () {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Cargando...'),
+          ),
+          body: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
     );
   }
 }
