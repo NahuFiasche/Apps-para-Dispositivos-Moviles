@@ -13,14 +13,15 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
     required String newUsername,
     required String newMail,
     required String newPassword,
+    String? newProfilePicture,
   }) async {
     int maxId = 0;
 
-    if (existsUsername(newUsername.trim()) == true) {
+    if (await existsUsername(newUsername.trim()) == true) {
       return 'Error. El nombre de usuario ya está en uso';
     }
 
-    if (existsMail(newMail.trim()) == true) {
+    if (await existsMail(newMail.trim()) == true) {
       return 'Error. El mail ya está en uso';
     }
 
@@ -41,6 +42,7 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
         mail: newMail.trim(),
         username: newUsername.trim(),
         password: newPassword.trim(),
+        profilePicture: newProfilePicture,
       );
 
       await UsersDatabaseHelper.instance.addUser(newUser);
@@ -60,7 +62,7 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
       return 'Error. La contraseña actual no es correcta';
     }
 
-    final usersList = state.value ?? [];
+    final usersList = await future;
     final currentUser = usersList.firstWhereOrNull(
       (u) => u.username == username,
     );
@@ -86,9 +88,36 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
     return null;
   }
 
+  Future<String?> updateProfilePicture({
+    required String username,
+    required String newProfilePicture,
+  }) async {
+    final usersList = await future;
+
+    final currentUser = usersList.firstWhereOrNull(
+      (u) => u.username.trim() == username.trim(),
+    );
+
+    if (currentUser == null) {
+      return 'Error. No se encontró el usuario a actualizar';
+    }
+
+    state = await AsyncValue.guard(() async {
+      final User updatedUser = currentUser.copyWith(
+        profilePicture: newProfilePicture,
+      );
+
+      await UsersDatabaseHelper.instance.updateUser(updatedUser);
+
+      return await UsersDatabaseHelper.instance.getUsers();
+    });
+
+    return null;
+  }
+
   Future<void> deleteUser(String usernameToDelete) async {
     state = await AsyncValue.guard(() async {
-      final currentUsers = state.value ?? [];
+      final currentUsers = await future;
 
       final userToDelete = currentUsers.firstWhereOrNull(
         (u) => u.username == usernameToDelete,
@@ -102,8 +131,8 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
     });
   }
 
-  String? getUserPassword({String? userMail, String? username}) {
-    final currentUsers = state.value ?? [];
+  Future<String?> getUserPassword({String? userMail, String? username}) async {
+    final currentUsers = await future;
 
     if (userMail != null) {
       String mailToFind = userMail.trim();
@@ -126,7 +155,7 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
     return null;
   }
 
-  Future<String?> getUsername(String userMail) async{
+  Future<String?> getUsername(String userMail) async {
     final currentUsers = await future;
     String mailToFind = userMail.trim();
 
@@ -136,14 +165,25 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
     return user?.username;
   }
 
-  Future<String?> getMail(String username) async{
-    final currentUsers = await future;
+  String? getMail(String username) {
+    final currentUsers = state.value ?? [];
     final usernameToFind = username.trim();
 
     final user = currentUsers.firstWhereOrNull(
       (u) => u.username.trim() == usernameToFind,
     );
     return user?.mail;
+  }
+
+  String? getProfilePicture(String username) {
+    final currentUsers = state.value ?? [];
+    final usernameToFind = username.trim();
+
+    final userProfilePicture = currentUsers.firstWhereOrNull(
+      (u) => u.username.trim() == usernameToFind,
+    );
+
+    return userProfilePicture?.profilePicture;
   }
 
   Future<bool> validateLogin(String username, String password) async {
@@ -154,8 +194,8 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
     );
   }
 
-  bool existsUsername(String username) {
-    final currentUsers = state.value ?? [];
+  Future<bool> existsUsername(String username) async {
+    final currentUsers = await future;
     final cleanUsername = username.trim().toLowerCase();
 
     return currentUsers.any(
@@ -163,8 +203,8 @@ class UsersNotifier extends AsyncNotifier<List<User>> {
     );
   }
 
-  bool existsMail(String mail) {
-    final currentUsers = state.value ?? [];
+  Future<bool> existsMail(String mail) async {
+    final currentUsers = await future;
     final cleanMail = mail.trim().toLowerCase();
 
     return currentUsers.any(

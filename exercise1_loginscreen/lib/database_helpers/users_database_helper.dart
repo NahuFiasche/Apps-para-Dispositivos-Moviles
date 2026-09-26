@@ -26,7 +26,7 @@ class UsersDatabaseHelper {
 
     return await openDatabase(
       databasePath,
-      version: 1,
+      version: 2,
       onCreate: _createDatabase,
     );
   }
@@ -91,7 +91,7 @@ class UsersDatabaseHelper {
       'mail': user.mail,
       'username': user.username,
       'password': user.password,
-      //'profilePicture': user.profilePicture,
+      'profilePicture': user.profilePicture,
     };
   }
 
@@ -101,7 +101,7 @@ class UsersDatabaseHelper {
       mail: map['mail'] ?? '',
       username: map['username'] ?? '',
       password: map['password'] ?? '',
-      //profilePicture: map['profilePicture'],
+      profilePicture: map['profilePicture'],
     );
   }
 }

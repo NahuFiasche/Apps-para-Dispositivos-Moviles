@@ -1,8 +1,12 @@
+import 'dart:io';
+
+import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:exercise1_loginscreen/config/menu_items.dart';
 
-class DrawerMenu extends StatefulWidget {
+class DrawerMenu extends ConsumerStatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldkey;
   final String username;
 
@@ -13,10 +17,10 @@ class DrawerMenu extends StatefulWidget {
   });
 
   @override
-  State<DrawerMenu> createState() => DrawerMenuState();
+  ConsumerState<DrawerMenu> createState() => DrawerMenuState();
 }
 
-class DrawerMenuState extends State<DrawerMenu> {
+class DrawerMenuState extends ConsumerState<DrawerMenu> {
   int? selectedScreen;
 
   @override
@@ -44,15 +48,12 @@ class DrawerMenuState extends State<DrawerMenu> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: colorScheme.primary,
-                child: Icon(
-                  Icons.person_rounded,
-                  size: 36,
-                  color: colorScheme.onPrimary,
-                ),
+
+              _ProfilePicture(
+                username: widget.username,
+                colorScheme: colorScheme,
               ),
+
               const SizedBox(height: 12),
               Text(
                 widget.username,
@@ -61,6 +62,7 @@ class DrawerMenuState extends State<DrawerMenu> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              
               Text(
                 'Sesión activa',
                 style: textTheme.bodySmall?.copyWith(
@@ -72,7 +74,7 @@ class DrawerMenuState extends State<DrawerMenu> {
         ),
 
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Text(
             'Opciones',
             style: textTheme.titleSmall?.copyWith(
@@ -89,6 +91,61 @@ class DrawerMenuState extends State<DrawerMenu> {
             label: Text(item.title),
           ),
       ],
+    );
+  }
+}
+
+class _ProfilePicture extends ConsumerWidget {
+  final String username;
+  final ColorScheme colorScheme;
+
+  const _ProfilePicture({required this.username, required this.colorScheme});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usersAsync = ref.watch(usersProvider);
+    return usersAsync.when(
+      data: (users) {
+        final String? profilePath = ref
+            .read(usersProvider.notifier)
+            .getProfilePicture(username);
+
+        final hasImage =
+            profilePath != null &&
+            profilePath.isNotEmpty &&
+            File(profilePath).existsSync();
+
+        return CircleAvatar(
+          radius: 28,
+          backgroundColor: colorScheme.primary,
+          backgroundImage: hasImage ? FileImage(File(profilePath)) : null,
+          child: !hasImage
+              ? Icon(
+                  Icons.person_rounded,
+                  size: 36,
+                  color: colorScheme.onPrimary,
+                )
+              : null,
+        );
+      },
+      loading: () => CircleAvatar(
+        radius: 28,
+        backgroundColor: colorScheme.primary,
+        child: const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      error: (error, stack) => CircleAvatar(
+        radius: 28,
+        backgroundColor: colorScheme.primary,
+        child: Icon(
+          Icons.person_rounded,
+          size: 36,
+          color: colorScheme.onPrimary,
+        ),
+      ),
     );
   }
 }

@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:exercise1_loginscreen/widgets/section_label.dart';
+import 'package:image_picker/image_picker.dart';
 
 class UserAddScreen extends StatelessWidget {
   static const String name = 'addUser_screen';
@@ -36,6 +39,7 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
 
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  XFile? _selectedProfileImage;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +51,68 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          SectionLabel(
+            text: 'Imagen de Perfil',
+            colorScheme: colorScheme,
+          ),
+
+          Center(
+            child: IconButton(
+              iconSize: 90,
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => SafeArea(
+                    child: Wrap(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.photo_library_rounded),
+                          title: const Text('Elegir de la galería'),
+                          onTap: () async {
+                            Navigator.pop(context); // Cierra el menú
+                            final image = await ImagePicker().pickImage(
+                              source: ImageSource.gallery,
+                            );
+                            if (image != null) {
+                              setState(() => _selectedProfileImage = image);
+                            }
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.photo_camera_rounded),
+                          title: const Text('Tomar una foto'),
+                          onTap: () async {
+                            Navigator.pop(context); // Cierra el menú
+                            final image = await ImagePicker().pickImage(
+                              source: ImageSource.camera,
+                            );
+                            if (image != null) {
+                              setState(() => _selectedProfileImage = image);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              icon: CircleAvatar(
+                radius: 45,
+                backgroundColor: colorScheme.primaryContainer,
+                backgroundImage: _selectedProfileImage != null
+                    ? FileImage(File(_selectedProfileImage!.path))
+                    : null,
+                child: _selectedProfileImage == null
+                    ? Icon(
+                        Icons.add_a_photo_rounded,
+                        size: 35,
+                        color: colorScheme.primary,
+                      )
+                    : null,
+              ),
+            ),
+          ),
+
           SectionLabel(
             text: 'Información del perfil',
             colorScheme: colorScheme,
@@ -66,7 +132,7 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
             icon: Icons.mail_rounded,
             textTheme: textTheme,
             colorScheme: colorScheme,
-            validator: _requiredValidator,
+            validator: _mailValidator,
             controller: _newMailController,
           ),
 
@@ -135,6 +201,19 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     }
   }
 
+    String? _mailValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Este campo es obligatorio';
+    } 
+
+    if(value.contains('@') == false)
+    {
+      return 'Ingrese un Correo válido';
+    }
+
+    return null;
+  }
+
   String? _confirmPasswordValidator(String? confirmPassword) {
     if (confirmPassword == null || confirmPassword.trim().isEmpty) {
       return 'Este campo es obligatorio';
@@ -162,10 +241,11 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
           newMail: newMail,
           newUsername: newUsername,
           newPassword: newPassword,
+          newProfilePicture: _selectedProfileImage?.path,
         );
 
     if (!context.mounted) return;
-    
+
     if (returnString != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

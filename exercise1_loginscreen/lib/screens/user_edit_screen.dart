@@ -39,13 +39,6 @@ class _EditUserBodyState extends ConsumerState<_EditUserBody> {
   bool _obscureNewPassword = true;
 
   @override
-  void dispose() {
-    _currentPasswordController.dispose();
-    _newPasswordController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
@@ -63,7 +56,7 @@ class _EditUserBodyState extends ConsumerState<_EditUserBody> {
             textTheme: textTheme,
             colorScheme: colorScheme,
             controller: _currentPasswordController,
-            validator: _currentPasswordValidator,
+            validator: _validator,
             obscureText: _obscureCurrentPassword,
             suffixIcon: IconButton(
               icon: Icon(
@@ -83,7 +76,7 @@ class _EditUserBodyState extends ConsumerState<_EditUserBody> {
             textTheme: textTheme,
             colorScheme: colorScheme,
             controller: _newPasswordController,
-            validator: _updatedPasswordValidator,
+            validator: _validator,
             obscureText: _obscureNewPassword,
             suffixIcon: IconButton(
               icon: Icon(
@@ -112,27 +105,9 @@ class _EditUserBodyState extends ConsumerState<_EditUserBody> {
     );
   }
 
-  String? _updatedPasswordValidator(String? updatedPassword) {
-    if (updatedPassword == null || updatedPassword.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    if (updatedPassword ==
-        ref
-            .read(usersProvider.notifier)
-            .getUserPassword(username: widget.username)) {
-      return 'La nueva contraseña es igual a la contraseña actual';
-    } else {
-      return null;
-    }
-  }
-
-  String? _currentPasswordValidator(String? currentPassword) {
-    if (currentPassword !=
-        ref
-            .read(usersProvider.notifier)
-            .getUserPassword(username: widget.username)) {
-      return 'La contraseña actual no es correcta';
+  String? _validator(String? value) {
+    if (value!.isEmpty == true || value == '') {
+      return 'Este campo es obligatorio.';
     } else {
       return null;
     }

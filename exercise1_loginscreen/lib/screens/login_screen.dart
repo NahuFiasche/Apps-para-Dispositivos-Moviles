@@ -46,19 +46,7 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
           children: [
             const SizedBox(height: 48),
 
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.sports_esports_rounded,
-                size: 64,
-                color: colorScheme.onPrimaryContainer,
-              ),
-            ),
+            _MainAppIcon(colorScheme: colorScheme),
 
             const SizedBox(height: 16),
 
@@ -117,23 +105,7 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
             ),
 
             const SizedBox(height: 8),
-
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => const ForgotPasswordDialog(),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  visualDensity: VisualDensity.compact,
-                ),
-                child: const Text('¿Olvidaste tu contraseña?'),
-              ),
-            ),
+            _ForgottPasswordButton(),
 
             const SizedBox(height: 24),
 
@@ -141,7 +113,6 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
               width: double.infinity,
               height: 56,
               child: FilledButton(
-                //TODO: Agregar circularindicator mientras espera la rta del logeo
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -157,26 +128,7 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
 
             const SizedBox(height: 32),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '¿No tienes una cuenta?',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    context.pushNamed(UserAddScreen.name);
-                  },
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  child: const Text('Registrarse'),
-                ),
-              ],
-            ),
+            _CreateAccountButton(textTheme: textTheme, colorScheme: colorScheme),
           ],
         ),
       ),
@@ -225,17 +177,101 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
   }
 }
 
-class ForgotPasswordDialog extends ConsumerStatefulWidget {
-  const ForgotPasswordDialog({super.key});
+class _CreateAccountButton extends StatelessWidget {
+  const new({
+    required this.textTheme,
+    required this.colorScheme,
+  });
+
+  final TextTheme textTheme;
+  final ColorScheme colorScheme;
 
   @override
-  ConsumerState<ForgotPasswordDialog> createState() =>
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          '¿No tienes una cuenta?',
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            context.pushNamed(UserAddScreen.name);
+          },
+          style: TextButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+          ),
+          child: const Text('Registrarse'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ForgottPasswordButton extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => _ForgotPasswordDialog(),
+          );
+        },
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          visualDensity: VisualDensity.compact,
+        ),
+        child: const Text('¿Olvidaste tu contraseña?'),
+      ),
+    );
+  }
+}
+
+class _MainAppIcon extends StatelessWidget {
+  const new({
+    required this.colorScheme,
+  });
+
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        Icons.sports_esports_rounded,
+        size: 64,
+        color: colorScheme.onPrimaryContainer,
+      ),
+    );
+  }
+}
+
+class _ForgotPasswordDialog extends ConsumerStatefulWidget {
+
+  @override
+  ConsumerState<_ForgotPasswordDialog> createState() =>
       _ForgotPasswordDialogState();
 }
 
-class _ForgotPasswordDialogState extends ConsumerState<ForgotPasswordDialog> {
+class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  // Error async (ej: el mail no existe en la DB). Se muestra con errorText.
+  String? _emailError;
 
   @override
   Widget build(BuildContext context) {
@@ -257,12 +293,19 @@ class _ForgotPasswordDialogState extends ConsumerState<ForgotPasswordDialog> {
 
             TextFormField(
               controller: _emailController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Correo electrónico',
-                prefixIcon: Icon(Icons.email_outlined),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.email_outlined),
+                border: const OutlineInputBorder(),
+                errorText: _emailError,
               ),
               validator: _mailValidator,
+              onChanged: (_) {
+                // Limpiamos el error async cuando el usuario edita el campo
+                if (_emailError != null) {
+                  setState(() => _emailError = null);
+                }
+              },
             ),
           ],
         ),
@@ -287,7 +330,20 @@ class _ForgotPasswordDialogState extends ConsumerState<ForgotPasswordDialog> {
 
     final String emailToFind = _emailController.text.trim();
 
-    final String? userPassword = ref
+    if (await ref.read(usersProvider.notifier).existsMail(emailToFind.trim()) ==
+        false) {
+      if (!mounted) return;
+
+      // Mostramos el error debajo del campo en vez de un snackbar,
+      // ya que dentro de un showDialog el snackbar queda oculto.
+      setState(() {
+        _emailError = 'No existe un usuario ese correo';
+      });
+
+      return;
+    }
+
+    final String? userPassword = await ref
         .read(usersProvider.notifier)
         .getUserPassword(userMail: emailToFind);
     final String? username = await ref
@@ -380,8 +436,8 @@ class _ForgotPasswordDialogState extends ConsumerState<ForgotPasswordDialog> {
       return 'Ingresá tu correo';
     }
 
-    if (ref.read(usersProvider.notifier).existsMail(mail.trim()) == false) {
-      return 'No existe un usuario con el correo ${mail.trim()}';
+    if (mail.contains('@') == false) {
+      return 'Ingresá un correo válido';
     }
 
     return null;
