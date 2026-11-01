@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "589594551779",
+    "project_id": "catalogo-juegos-292cb",
+    "storage_bucket": "catalogo-juegos-292cb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:589594551779:android:d153daf1091d08472cacd6",
+        "android_client_info": {
+          "package_name": "com.example.exercise1_loginscreen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs_VWtfICaVa8rwFvfNSirmnsJALmGdfw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

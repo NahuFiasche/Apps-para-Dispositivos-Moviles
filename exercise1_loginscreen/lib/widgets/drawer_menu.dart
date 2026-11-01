@@ -8,12 +8,12 @@ import 'package:exercise1_loginscreen/config/menu_items.dart';
 
 class DrawerMenu extends ConsumerStatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldkey;
-  final String username;
+  final String usermail;
 
   const DrawerMenu({
     super.key,
     required this.scaffoldkey,
-    required this.username,
+    required this.usermail,
   });
 
   @override
@@ -37,7 +37,7 @@ class DrawerMenuState extends ConsumerState<DrawerMenu> {
 
         widget.scaffoldkey.currentState?.closeDrawer();
 
-        context.push(menuItems[value].link, extra: widget.username);
+        context.push(menuItems[value].link, extra: widget.usermail);
       },
       children: [
         DrawerHeader(
@@ -48,21 +48,20 @@ class DrawerMenuState extends ConsumerState<DrawerMenu> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-
               _ProfilePicture(
-                username: widget.username,
+                username: widget.usermail,
                 colorScheme: colorScheme,
               ),
 
               const SizedBox(height: 12),
               Text(
-                widget.username,
+                widget.usermail,
                 style: textTheme.titleMedium?.copyWith(
                   color: colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              
+
               Text(
                 'Sesión activa',
                 style: textTheme.bodySmall?.copyWith(

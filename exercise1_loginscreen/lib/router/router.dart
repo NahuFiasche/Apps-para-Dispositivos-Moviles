@@ -22,19 +22,20 @@ final appRouter = GoRouter(
       name: 'gamesLibrary_screen',
       path: '/gamesLibrary_screen',
       builder: (context, state) => GamesLibraryScreen(
-        username: (state.extra as String?) ?? 'Undefined username',
+        usermail: (state.extra as String?) ?? 'Undefined username',
       ),
     ),
     GoRoute(
       name: 'gameDetail_screen',
       path: '/gameDetail_screen',
-      builder: (context, state) => GameDetailScreen(gameId: state.extra as String),
+      builder: (context, state) =>
+          GameDetailScreen(gameId: state.extra as String),
     ),
     GoRoute(
       name: 'userSettings_screen',
       path: '/userSettings_screen',
       builder: (context, state) =>
-          UserSettingsScreen(username: state.extra as String),
+          UserSettingsScreen(usermail: state.extra as String),
     ),
     GoRoute(
       name: '/generalSettings_screen',
@@ -60,7 +61,7 @@ final appRouter = GoRouter(
       name: UserEditScreen.name,
       path: '/editUser_screen',
       builder: (context, state) =>
-          UserEditScreen(username: state.extra as String),
+          UserEditScreen(usermail: state.extra as String),
     ),
   ],
 );

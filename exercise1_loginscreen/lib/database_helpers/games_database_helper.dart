@@ -1,121 +1,69 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:exercise1_loginscreen/data/games_datasource.dart';
 import 'package:exercise1_loginscreen/entities/games.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 
 class GamesDatabaseHelper {
   GamesDatabaseHelper._init();
 
   static final GamesDatabaseHelper instance = GamesDatabaseHelper._init();
 
-  static Database? _database;
-  static const String _tableName = 'gamesList';
+  final CollectionReference _gamesCollection = FirebaseFirestore.instance
+      .collection('games');
 
-  Future<Database> get database async {
-    if (_database != null) {
-      return _database!;
-    } else {
-      _database = await _initDatabase('games_database.db');
-      return _database!;
+  Future<List<Game>> getGames() async {
+    final snapshot = await _gamesCollection.get();
+
+    if (snapshot.docs.isEmpty) {
+      await _initializeDefaultGames();
+      final freshSnapshot = await _gamesCollection.get();
+      return freshSnapshot.docs.map((doc) => _docToGame(doc)).toList();
     }
+
+    return snapshot.docs.map((doc) => _docToGame(doc)).toList();
   }
 
-  Future<Database> _initDatabase(String fileName) async {
-    final databaseFolderPath = await getDatabasesPath();
-    final databasePath = join(databaseFolderPath, fileName);
-
-    return await openDatabase(
-      databasePath,
-      version: 1,
-      onCreate: _createDatabase,
-    );
-  }
-
-  Future<void> _createDatabase(Database database, int version) async {
-    await database.execute('''
-      CREATE TABLE $_tableName (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        developer TEXT NOT NULL,
-        releaseYear TEXT NOT NULL,
-        plattform TEXT NOT NULL,
-        description TEXT NOT NULL,
-        gameCover TEXT,
-        gameImages TEXT NOT NULL
-      )
-    ''');
-    
+  Future<void> _initializeDefaultGames() async {
     for (final game in gamesDatasource) {
-      await database.insert(
-        'gamesList',
-        _gameToMap(game),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _gamesCollection.add(_gameToMap(game));
     }
   }
 
   Future<void> insertGame(Game game) async {
-    final database = await instance.database;
-    await database.insert(
-      _tableName,
-      _gameToMap(game),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<List<Game>> getGames() async {
-    final database = await instance.database;
-    final result = await database.query(_tableName);
-    return result.map((map) => _mapToGame(map)).toList();
+    await _gamesCollection.add(_gameToMap(game));
   }
 
   Future<void> updateGame(Game game) async {
-    final database = await instance.database;
-    await database.update(
-      _tableName,
-      _gameToMap(game),
-      where: 'id = ?',
-      whereArgs: [game.id],
-    );
+    await _gamesCollection.doc(game.id).update(_gameToMap(game));
   }
 
   Future<void> deleteGame(String id) async {
-    final database = await instance.database;
-    await database.delete(
-      _tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await _gamesCollection.doc(id).delete();
   }
 
   Map<String, dynamic> _gameToMap(Game game) {
     return {
-      'id': game.id,
       'title': game.title,
       'developer': game.developer,
       'releaseYear': game.releaseYear,
       'plattform': game.plattform,
       'description': game.description,
       'gameCover': game.gameCover,
-      'gameImages': game.gameImages.join(','),
+      'gameImages': game.gameImages,
     };
   }
 
-  Game _mapToGame(Map<String, dynamic> map) {
+  Game _docToGame(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
     return Game(
-      id: map['id'].toString(),
-      title: map['title'] ?? '',
-      developer: map['developer'] ?? '',
-      releaseYear: map['releaseYear'] ?? '',
-      plattform: map['plattform'] ?? '',
-      description: map['description'] ?? '',
-      gameCover: map['gameCover'],
-      gameImages:
-          (map['gameImages'] as String?)
-              ?.split(',')
-              .where((e) => e.isNotEmpty)
-              .toList() ??
-          [],
+      id: doc.id,
+      title: data['title'] ?? '',
+      developer: data['developer'] ?? '',
+      releaseYear: data['releaseYear'] ?? '',
+      plattform: data['plattform'] ?? '',
+      description: data['description'] ?? '',
+      gameCover: data['gameCover'],
+      gameImages: List<String>.from(data['gameImages'] ?? []),
     );
   }
 }

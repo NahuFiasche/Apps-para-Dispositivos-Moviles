@@ -6,23 +6,23 @@ import 'package:exercise1_loginscreen/widgets/section_label.dart';
 
 class UserEditScreen extends StatelessWidget {
   static const String name = 'editUser_screen';
-  final String username;
+  final String usermail;
 
-  const UserEditScreen({super.key, required this.username});
+  const UserEditScreen({super.key, required this.usermail});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Cambiar Contraseña')),
-      body: _EditUserBody(username: username),
+      body: _EditUserBody(usermail: usermail),
     );
   }
 }
 
 class _EditUserBody extends ConsumerStatefulWidget {
-  final String username;
+  final String usermail;
 
-  const _EditUserBody({required this.username});
+  const _EditUserBody({required this.usermail});
 
   @override
   ConsumerState<_EditUserBody> createState() => _EditUserBodyState();
@@ -124,7 +124,7 @@ class _EditUserBodyState extends ConsumerState<_EditUserBody> {
     final String? errorMessage = await ref
         .read(usersProvider.notifier)
         .updatePassword(
-          username: widget.username,
+          usermail: widget.usermail,
           currentPassword: currentPassword,
           newPassword: updatedPassword,
         );
@@ -151,7 +151,7 @@ class _EditUserBodyState extends ConsumerState<_EditUserBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Contraseña de ${widget.username} actualizada',
+          'Contraseña de ${widget.usermail} actualizada',
         ),
       ),
     );

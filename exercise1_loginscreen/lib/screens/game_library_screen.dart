@@ -11,9 +11,9 @@ import 'package:go_router/go_router.dart';
 
 class GamesLibraryScreen extends ConsumerWidget {
   static const String name = 'gamesLibrary_screen';
-  final String username;
+  final String usermail;
 
-  const GamesLibraryScreen({super.key, this.username = 'Undefined username'});
+  const GamesLibraryScreen({super.key, this.usermail = 'Undefined mail'});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,7 +33,7 @@ class GamesLibraryScreen extends ConsumerWidget {
                 builder: (dialogContext) {
                   return ConfirmationDialog(
                     title: '¿Cerrar Sesión?',
-                    message: 'Se cerrará la sesión de $username',
+                    message: 'Se cerrará la sesión de $usermail',
                     actionButtonText: 'Cerrar',
                     onDelete: () {
                       context.goNamed(LoginScreen.name);
@@ -48,13 +48,13 @@ class GamesLibraryScreen extends ConsumerWidget {
 
       drawer: DrawerMenu(
         scaffoldkey: scaffoldKey,
-        username: username,
+        usermail: usermail,
       ),
 
       body: gamesList.when(
         data: (gamesList) {
           return _GameLibrary(
-            username: username,
+            usermail: usermail,
             gamesList: gamesList,
           );
         },
@@ -76,10 +76,10 @@ class GamesLibraryScreen extends ConsumerWidget {
 }
 
 class _GameLibrary extends ConsumerWidget {
-  final String username;
+  final String usermail;
   final List<Game> gamesList;
 
-  const _GameLibrary({required this.username, required this.gamesList});
+  const _GameLibrary({required this.usermail, required this.gamesList});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -31,7 +31,6 @@ class _AddUserBody extends ConsumerStatefulWidget {
 class _AddUserBodyState extends ConsumerState<_AddUserBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _newUsernameController = TextEditingController();
   final TextEditingController _newMailController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -119,15 +118,6 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
           ),
 
           _AddUserField(
-            labelText: 'Nombre de usuario',
-            icon: Icons.alternate_email_rounded,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            validator: _requiredValidator,
-            controller: _newUsernameController,
-          ),
-
-          _AddUserField(
             labelText: 'Mail',
             icon: Icons.mail_rounded,
             textTheme: textTheme,
@@ -201,13 +191,12 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     }
   }
 
-    String? _mailValidator(String? value) {
+  String? _mailValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Este campo es obligatorio';
-    } 
+    }
 
-    if(value.contains('@') == false)
-    {
+    if (value.contains('@') == false) {
       return 'Ingrese un Correo válido';
     }
 
@@ -231,15 +220,13 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
       return;
     }
 
-    final String newUsername = _newUsernameController.text.trim();
     final String newMail = _newMailController.text.trim();
     final String newPassword = _newPasswordController.text.trim();
 
     final String? returnString = await ref
         .read(usersProvider.notifier)
-        .addUser(
+        .createAccount(
           newMail: newMail,
-          newUsername: newUsername,
           newPassword: newPassword,
           newProfilePicture: _selectedProfileImage?.path,
         );
@@ -263,7 +250,7 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     } else {
       context.pop();
 
-      _showUserInfo(userPassword: newPassword, username: newUsername);
+      _showUserInfo(userPassword: newPassword, username: newMail);
     }
   }
 

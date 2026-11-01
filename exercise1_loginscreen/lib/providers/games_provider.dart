@@ -10,19 +10,6 @@ class GamesNotifier extends AsyncNotifier<List<Game>> {
 
   Future<void> addGame(Game newGame) async {
     state = await AsyncValue.guard(() async {
-      final currentGamesList = state.value ?? [];
-
-      int maxId = 0;
-      for (final game in currentGamesList) {
-        final parsedId = int.tryParse(game.id);
-        if (parsedId != null && parsedId > maxId) {
-          maxId = parsedId;
-        }
-      }
-      final String newId = (maxId + 1).toString();
-
-      newGame = newGame.copyWith(id: newId);
-
       await GamesDatabaseHelper.instance.insertGame(newGame);
 
       return await GamesDatabaseHelper.instance.getGames();

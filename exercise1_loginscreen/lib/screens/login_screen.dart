@@ -28,7 +28,7 @@ class LoginBodyBuilder extends ConsumerStatefulWidget {
 }
 
 class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
-  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -67,7 +67,7 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
             const SizedBox(height: 32),
 
             TextField(
-              controller: usernameController,
+              controller: emailController,
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 labelText: 'Usuario',
@@ -128,7 +128,10 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
 
             const SizedBox(height: 32),
 
-            _CreateAccountButton(textTheme: textTheme, colorScheme: colorScheme),
+            _CreateAccountButton(
+              textTheme: textTheme,
+              colorScheme: colorScheme,
+            ),
           ],
         ),
       ),
@@ -136,30 +139,20 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
   }
 
   Future<void> _login(BuildContext context) async {
-    final username = usernameController.text.trim();
+    final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final theme = Theme.of(context);
+    try {
+      await UsersProvider.instance.signIn(email, password);
 
-    // Esperamos a que la lista de usuarios termine de cargar de la DB
-    await ref.read(usersProvider.future);
-
-    if (!context.mounted) return;
-
-    if (await ref
-            .read(usersProvider.notifier)
-            .validateLogin(
-              username,
-              password,
-            ) ==
-        true) {
       if (!context.mounted) return;
 
       context.goNamed(
         GamesLibraryScreen.name,
-        extra: usernameController.text,
+        extra: emailController.text,
       );
-    } else {
-      if (!context.mounted) return;
+    } catch (e) {
+      final errorMessage = e.toString().replaceAll('Exception: ', '');
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -167,7 +160,7 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
           behavior: SnackBarBehavior.floating,
           width: 320,
           content: Text(
-            'Usuario y/o contraseña incorrectos',
+            errorMessage,
             style: TextStyle(color: theme.colorScheme.onError),
           ),
           backgroundColor: theme.colorScheme.error,
@@ -212,7 +205,6 @@ class _CreateAccountButton extends StatelessWidget {
 }
 
 class _ForgottPasswordButton extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return Align(
@@ -260,7 +252,6 @@ class _MainAppIcon extends StatelessWidget {
 }
 
 class _ForgotPasswordDialog extends ConsumerStatefulWidget {
-
   @override
   ConsumerState<_ForgotPasswordDialog> createState() =>
       _ForgotPasswordDialogState();
@@ -286,7 +277,7 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Ingresá tu correo electrónico para verificar tu cuenta.',
+              'Ingresá tu correo electrónico para recuperar tu cuenta.',
             ),
 
             const SizedBox(height: 16),
@@ -327,7 +318,8 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
     if (_formKey.currentState?.validate() != true) {
       return;
     }
-
+  //TODO: Cambiar, ahora va a mandar un correo
+/*
     final String emailToFind = _emailController.text.trim();
 
     if (await ref.read(usersProvider.notifier).existsMail(emailToFind.trim()) ==
@@ -355,7 +347,7 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
 
     if (userPassword != null && username != null) {
       showUserInfo(userPassword: userPassword, username: username);
-    }
+    }*/
   }
 
   void showUserInfo({required String userPassword, required String username}) {

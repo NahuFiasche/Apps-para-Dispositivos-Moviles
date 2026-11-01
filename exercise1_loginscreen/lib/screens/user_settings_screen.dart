@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:exercise1_loginscreen/entities/user.dart';
 import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
@@ -11,9 +12,9 @@ import 'package:image_picker/image_picker.dart';
 
 class UserSettingsScreen extends StatelessWidget {
   static const String name = 'userSettings_screen';
-  final String username;
+  final String usermail;
 
-  const UserSettingsScreen({super.key, required this.username});
+  const UserSettingsScreen({super.key, required this.usermail});
 
   @override
   Widget build(BuildContext context) {
@@ -21,15 +22,15 @@ class UserSettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Ajustes de Perfil'),
       ),
-      body: UserSettingsBody(username: username),
+      body: UserSettingsBody(usermail: usermail),
     );
   }
 }
 
 class UserSettingsBody extends ConsumerStatefulWidget {
-  final String username;
+  final String usermail;
 
-  const UserSettingsBody({super.key, required this.username});
+  const UserSettingsBody({super.key, required this.usermail});
 
   @override
   ConsumerState<UserSettingsBody> createState() => UserSettingsBodyState();
@@ -56,7 +57,7 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
                 child: Column(
                   children: [
                     Text(
-                      widget.username,
+                      widget.usermail,
                       style: textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -75,7 +76,7 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
             Positioned(
               top: 0,
               child: _ProfilePicture(
-                username: widget.username,
+                username: widget.usermail,
                 onTap: () => _showImageSourceSheet(context),
               ),
             ),
@@ -131,7 +132,7 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
     final String? errorMessage = await ref
         .read(usersProvider.notifier)
         .updateProfilePicture(
-          username: widget.username,
+          username: widget.usermail,
           newProfilePicture: image.path,
         );
 
@@ -170,7 +171,7 @@ class _ChangePasswordButton extends StatelessWidget {
       child: FilledButton.tonalIcon(
         onPressed: () => context.pushNamed(
           UserEditScreen.name,
-          extra: widget.username,
+          extra: widget.usermail,
         ),
         icon: const Icon(Icons.edit_outlined),
         label: const Text('Cambiar Contraseña'),
@@ -188,13 +189,13 @@ class _AccountDetails extends ConsumerWidget {
 
   final ColorScheme colorScheme;
   final UserSettingsBody widget;
-  final List<User> users;
+  final List<UserData> users;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final String? userMail = ref
         .read(usersProvider.notifier)
-        .getMail(widget.username);
+        .getMail(widget.usermail);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -206,7 +207,7 @@ class _AccountDetails extends ConsumerWidget {
               color: colorScheme.primary,
             ),
             title: const Text('Nombre de usuario'),
-            subtitle: Text(widget.username),
+            subtitle: Text(widget.usermail),
           ),
 
           ListTile(
@@ -256,7 +257,7 @@ class _CloseSessionButton extends StatelessWidget {
           builder: (dialogContext) {
             return ConfirmationDialog(
               title: '¿Cerrar Sesión?',
-              message: 'Se cerrará la sesión de ${widget.username}',
+              message: 'Se cerrará la sesión de ${widget.usermail}',
               actionButtonText: 'Cerrar',
               onDelete: () {
                 context.goNamed(LoginScreen.name);
@@ -294,9 +295,9 @@ class _DeleteUserButton extends StatelessWidget {
               return ConfirmationDialog(
                 title: '¿Eliminar Perfil?',
                 message:
-                    'Esta acción no se puede deshacer. Se borrarán todos los datos asociados a ${widget.username}.',
+                    'Esta acción no se puede deshacer. Se borrarán todos los datos asociados a ${widget.usermail}.',
                 onDelete: () {
-                  ref.read(usersProvider.notifier).deleteUser(widget.username);
+                  ref.read(usersProvider.notifier).deleteUser(widget.usermail);
                   context.goNamed(LoginScreen.name);
                 },
                 actionButtonText: 'Eliminar',
