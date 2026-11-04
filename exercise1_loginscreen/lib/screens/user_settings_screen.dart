@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:exercise1_loginscreen/entities/user.dart';
 import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
 import 'package:exercise1_loginscreen/screens/user_edit_screen.dart';
@@ -41,8 +40,6 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final users = ref.watch(usersProvider).value ?? const [];
-
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       children: [
@@ -67,7 +64,7 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
                     _ChangePasswordButton(widget: widget),
 
                     const SizedBox(height: 16),
-                    _DeleteUserButton(widget: widget, ref: ref),
+                    _DeleteUserButton(widget: widget),
                   ],
                 ),
               ),
@@ -87,7 +84,7 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
 
         _SectionLabel(text: 'Cuenta', colorScheme: colorScheme),
 
-        _AccountDetails(colorScheme: colorScheme, widget: widget, users: users),
+        _AccountDetails(colorScheme: colorScheme, widget: widget),
 
         const SizedBox(height: 32),
 
@@ -129,8 +126,7 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
 
     if (image == null) return;
 
-    final String? errorMessage = await ref
-        .read(usersProvider.notifier)
+    final String? errorMessage = await UsersProvider.instance
         .updateProfilePicture(
           username: widget.usermail,
           newProfilePicture: image.path,
@@ -158,7 +154,7 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
 }
 
 class _ChangePasswordButton extends StatelessWidget {
-  const new({
+  const _ChangePasswordButton({
     required this.widget,
   });
 
@@ -180,22 +176,18 @@ class _ChangePasswordButton extends StatelessWidget {
   }
 }
 
-class _AccountDetails extends ConsumerWidget {
-  const new({
+class _AccountDetails extends StatelessWidget {
+  const _AccountDetails({
     required this.colorScheme,
     required this.widget,
-    required this.users,
   });
 
   final ColorScheme colorScheme;
   final UserSettingsBody widget;
-  final List<UserData> users;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final String? userMail = ref
-        .read(usersProvider.notifier)
-        .getMail(widget.usermail);
+  Widget build(BuildContext context) {
+    final String userMail = widget.usermail;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -217,7 +209,7 @@ class _AccountDetails extends ConsumerWidget {
             ),
             title: const Text('Mail'),
             subtitle: Text(
-              userMail ?? 'Sin mail',
+              userMail,
             ),
           ),
         ],
@@ -227,7 +219,7 @@ class _AccountDetails extends ConsumerWidget {
 }
 
 class _CloseSessionButton extends StatelessWidget {
-  const new({
+  const _CloseSessionButton({
     required this.colorScheme,
     required this.widget,
   });
@@ -271,13 +263,11 @@ class _CloseSessionButton extends StatelessWidget {
 }
 
 class _DeleteUserButton extends StatelessWidget {
-  const new({
+  const _DeleteUserButton({
     required this.widget,
-    required this.ref,
   });
 
   final UserSettingsBody widget;
-  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +287,7 @@ class _DeleteUserButton extends StatelessWidget {
                 message:
                     'Esta acción no se puede deshacer. Se borrarán todos los datos asociados a ${widget.usermail}.',
                 onDelete: () {
-                  ref.read(usersProvider.notifier).deleteUser(widget.usermail);
+                  UsersProvider.instance.deleteUser();
                   context.goNamed(LoginScreen.name);
                 },
                 actionButtonText: 'Eliminar',
@@ -333,62 +323,37 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _ProfilePicture extends ConsumerWidget {
+class _ProfilePicture extends StatelessWidget {
   final String username;
   final VoidCallback onTap;
 
   const _ProfilePicture({required this.username, required this.onTap});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final usersAsync = ref.watch(usersProvider);
+    final String? profilePath = UsersProvider.instance.getProfilePicture(
+      username,
+    );
+    final hasImage =
+        profilePath != null &&
+        profilePath.isNotEmpty &&
+        File(profilePath).existsSync();
 
     return IconButton(
       iconSize: 90,
       onPressed: onTap,
-      icon: usersAsync.when(
-        data: (users) {
-          final String? profilePath = ref
-              .read(usersProvider.notifier)
-              .getProfilePicture(username);
-
-          final hasImage =
-              profilePath != null &&
-              profilePath.isNotEmpty &&
-              File(profilePath).existsSync();
-
-          return CircleAvatar(
-            radius: 45,
-            backgroundColor: colorScheme.primaryContainer,
-            backgroundImage: hasImage ? FileImage(File(profilePath)) : null,
-            child: !hasImage
-                ? Icon(
-                    Icons.person_rounded,
-                    size: 45,
-                    color: colorScheme.primary,
-                  )
-                : null,
-          );
-        },
-        loading: () => CircleAvatar(
-          radius: 45,
-          backgroundColor: colorScheme.primaryContainer,
-          child: const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-        error: (error, stack) => CircleAvatar(
-          radius: 45,
-          backgroundColor: colorScheme.primaryContainer,
-          child: Icon(
-            Icons.person_rounded,
-            size: 45,
-            color: colorScheme.primary,
-          ),
-        ),
+      icon: CircleAvatar(
+        radius: 45,
+        backgroundColor: colorScheme.primaryContainer,
+        backgroundImage: hasImage ? FileImage(File(profilePath)) : null,
+        child: !hasImage
+            ? Icon(
+                Icons.person_rounded,
+                size: 45,
+                color: colorScheme.primary,
+              )
+            : null,
       ),
     );
   }

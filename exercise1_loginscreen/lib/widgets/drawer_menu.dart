@@ -1,6 +1,3 @@
-import 'dart:io';
-
-import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -102,6 +99,9 @@ class _ProfilePicture extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return Placeholder();
+    //TODO: Implementar
+    /*
     final usersAsync = ref.watch(usersProvider);
     return usersAsync.when(
       data: (users) {
@@ -145,6 +145,6 @@ class _ProfilePicture extends ConsumerWidget {
           color: colorScheme.onPrimary,
         ),
       ),
-    );
+    );*/
   }
 }

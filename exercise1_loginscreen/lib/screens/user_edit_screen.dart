@@ -121,13 +121,11 @@ class _EditUserBodyState extends ConsumerState<_EditUserBody> {
     final String currentPassword = _currentPasswordController.text.trim();
     final String updatedPassword = _newPasswordController.text.trim();
 
-    final String? errorMessage = await ref
-        .read(usersProvider.notifier)
-        .updatePassword(
-          usermail: widget.usermail,
-          currentPassword: currentPassword,
-          newPassword: updatedPassword,
-        );
+    final String? errorMessage = await UsersProvider.instance.updatePassword(
+      userMail: widget.usermail,
+      currentPassword: currentPassword,
+      newPassword: updatedPassword,
+    );
 
     if (!context.mounted) return;
 

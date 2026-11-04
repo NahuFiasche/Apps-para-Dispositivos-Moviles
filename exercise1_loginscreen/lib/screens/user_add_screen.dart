@@ -223,13 +223,10 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     final String newMail = _newMailController.text.trim();
     final String newPassword = _newPasswordController.text.trim();
 
-    final String? returnString = await ref
-        .read(usersProvider.notifier)
-        .createAccount(
-          newMail: newMail,
-          newPassword: newPassword,
-          newProfilePicture: _selectedProfileImage?.path,
-        );
+    final String? returnString = await UsersProvider.instance.createUser(
+      newMail: newMail,
+      newPassword: newPassword,
+    );
 
     if (!context.mounted) return;
 

@@ -14,6 +14,8 @@ class UsersDatabaseHelper {
         password: password,
       );
       return credential.user;
+    } on FirebaseAuthException {
+      rethrow; // Deja pasar el código de error original para poder mapearlo
     } catch (e) {
       throw Exception('Error al iniciar sesión: ${e.toString()}');
     }
@@ -26,6 +28,8 @@ class UsersDatabaseHelper {
         password: password,
       );
       return credential.user;
+    } on FirebaseAuthException {
+      rethrow; // Deja pasar el código de error original para poder mapearlo
     } catch (e) {
       throw Exception('Error al crear usuario: ${e.toString()}');
     }
@@ -62,6 +66,8 @@ class UsersDatabaseHelper {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException {
+      rethrow; // Deja pasar el código de error original para poder mapearlo
     } catch (e) {
       throw Exception(
         'Error al solicitar cambio de contraseña: ${e.toString()}',

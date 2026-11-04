@@ -142,21 +142,18 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final theme = Theme.of(context);
-    try {
-      await UsersProvider.instance.signIn(email, password);
 
-      if (!context.mounted) return;
+    final String? errorMessage = await UsersProvider.instance.signIn(
+      email,
+      password,
+    );
 
-      context.goNamed(
-        GamesLibraryScreen.name,
-        extra: emailController.text,
-      );
-    } catch (e) {
-      final errorMessage = e.toString().replaceAll('Exception: ', '');
+    if (!context.mounted) return;
 
+    if (errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          duration: Duration(seconds: 4),
+          duration: const Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
           width: 320,
           content: Text(
@@ -166,7 +163,10 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
           backgroundColor: theme.colorScheme.error,
         ),
       );
+      return;
     }
+
+    context.goNamed(GamesLibraryScreen.name, extra: emailController.text);
   }
 }
 
@@ -220,7 +220,9 @@ class _ForgottPasswordButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           visualDensity: VisualDensity.compact,
         ),
-        child: const Text('¿Olvidaste tu contraseña?'),
+        child: const Text(
+          '¿Olvidaste tu contraseña?',
+        ),
       ),
     );
   }
@@ -261,8 +263,8 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // Error async (ej: el mail no existe en la DB). Se muestra con errorText.
   String? _emailError;
+  bool _sending = false;
 
   @override
   Widget build(BuildContext context) {
@@ -292,7 +294,6 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
               ),
               validator: _mailValidator,
               onChanged: (_) {
-                // Limpiamos el error async cuando el usuario edita el campo
                 if (_emailError != null) {
                   setState(() => _emailError = null);
                 }
@@ -307,8 +308,14 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
           child: const Text('Cancelar'),
         ),
         FilledButton(
-          onPressed: _submit,
-          child: const Text('Buscar'),
+          onPressed: _sending ? null : _submit,
+          child: _sending
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Enviar mail'),
         ),
       ],
     );
@@ -318,108 +325,36 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
     if (_formKey.currentState?.validate() != true) {
       return;
     }
-  //TODO: Cambiar, ahora va a mandar un correo
-/*
+
     final String emailToFind = _emailController.text.trim();
 
-    if (await ref.read(usersProvider.notifier).existsMail(emailToFind.trim()) ==
-        false) {
-      if (!mounted) return;
+    setState(() => _sending = true);
 
-      // Mostramos el error debajo del campo en vez de un snackbar,
-      // ya que dentro de un showDialog el snackbar queda oculto.
-      setState(() {
-        _emailError = 'No existe un usuario ese correo';
-      });
+    final String? errorMessage = await UsersProvider.instance
+        .sendPasswordResetEmail(emailToFind);
 
+    if (!mounted) return;
+
+    setState(() => _sending = false);
+
+    if (errorMessage != null) {
+      setState(() => _emailError = errorMessage);
       return;
     }
 
-    final String? userPassword = await ref
-        .read(usersProvider.notifier)
-        .getUserPassword(userMail: emailToFind);
-    final String? username = await ref
-        .read(usersProvider.notifier)
-        .getUsername(emailToFind);
-
-    if (!mounted) return;
     Navigator.pop(context);
 
-    if (userPassword != null && username != null) {
-      showUserInfo(userPassword: userPassword, username: username);
-    }*/
-  }
-
-  void showUserInfo({required String userPassword, required String username}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        content: Text(
+          'Te enviamos un mail para restablecer tu contraseña a $emailToFind',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+        ),
       ),
-      builder: (context) {
-        final theme = Theme.of(context);
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.info_rounded,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
-
-              Text(
-                'Tu usuario es',
-                style: theme.textTheme.titleMedium,
-              ),
-
-              const SizedBox(height: 12),
-
-              SelectableText(
-                username,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              Text(
-                'Tu contraseña es',
-                style: theme.textTheme.titleMedium,
-              ),
-
-              const SizedBox(height: 8),
-
-              SelectableText(
-                userPassword,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Ok'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 

@@ -1,12 +1,31 @@
 import 'package:exercise1_loginscreen/database_helpers/users_database_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class UsersProvider {
   static final UsersProvider instance = UsersProvider._internal();
 
   UsersProvider._internal();
 
-  Future<void> signIn(String email, String password) async {
-    await UsersDatabaseHelper.instance.signIn(email, password);
+  Future<String?> signIn(String email, String password) async {
+    try {
+      await UsersDatabaseHelper.instance.signIn(email, password);
+    } on FirebaseAuthException catch (e) {
+      return switch (e.code) {
+        'invalid-email' => 'El mail ingresado no es válido',
+        'user-not-found' => 'No existe una cuenta con ese mail',
+        'wrong-password' ||
+        'invalid-credential' => 'El usuario o la contraseña son incorrectos',
+        'user-disabled' => 'Esta cuenta fue deshabilitada',
+        'too-many-requests' =>
+          'Demasiados intentos fallidos. Intentá de nuevo más tarde',
+        'network-request-failed' => 'Error de conexión. Intentá de nuevo',
+        _ => 'Error al iniciar sesión: ${e.message ?? e.code}',
+      };
+    } catch (e) {
+      return 'Error al iniciar sesión: ${e.toString()}';
+    }
+
+    return null;
   }
 
   Future<String?> createUser({
@@ -16,7 +35,21 @@ class UsersProvider {
   }) async {
     //TODO: Implementar carga de Imagen de Perfil en Firebase Storage
 
-    await UsersDatabaseHelper.instance.createAccount(newMail, newPassword);
+    try {
+      await UsersDatabaseHelper.instance.createAccount(newMail, newPassword);
+    } on FirebaseAuthException catch (e) {
+      return switch (e.code) {
+        'email-already-in-use' => 'El mail ya está registrado',
+        'invalid-email' => 'El mail ingresado no es válido',
+        'weak-password' => 'La contraseña debe tener al menos 6 caracteres',
+        'operation-not-allowed' =>
+          'El registro con Email/Contraseña está deshabilitado en Firebase',
+        'network-request-failed' => 'Error de conexión. Intentá de nuevo',
+        _ => 'Error al crear el usuario: ${e.message ?? e.code}',
+      };
+    } catch (e) {
+      return 'Error al crear el usuario: ${e.toString()}';
+    }
 
     return null;
   }
@@ -26,9 +59,9 @@ class UsersProvider {
     required String currentPassword,
     required String newPassword,
   }) async {
-    try {
-      await signIn(userMail, currentPassword);
-    } catch (e) {
+    final String? signInError = await signIn(userMail, currentPassword);
+
+    if (signInError != null) {
       return "La contraseña actual no es correcta";
     }
 
@@ -72,6 +105,23 @@ class UsersProvider {
 
   Future<void> deleteUser() async {
     await UsersDatabaseHelper.instance.deleteAccount();
+  }
+
+  Future<String?> sendPasswordResetEmail(String email) async {
+    try {
+      await UsersDatabaseHelper.instance.sendPasswordResetEmail(email);
+    } on FirebaseAuthException catch (e) {
+      return switch (e.code) {
+        'invalid-email' => 'El mail ingresado no es válido',
+        'user-not-found' => 'No existe una cuenta con ese mail',
+        'network-request-failed' => 'Error de conexión. Intentá de nuevo',
+        _ => 'Error al enviar el mail: ${e.message ?? e.code}',
+      };
+    } catch (e) {
+      return 'Error al enviar el mail: ${e.toString()}';
+    }
+
+    return null;
   }
 
   String? getProfilePicture(String username) {
