@@ -127,7 +127,7 @@ class _GameItem extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          game.developer,
+          game.releaseYear,
           style: textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -145,7 +145,7 @@ class _GameItem extends StatelessWidget {
   }
 
   Widget getGameCover(Color errorColor) {
-    if (game.gameCover == null) {
+    if (game.gameCover.isEmpty) {
       return Icon(
         Icons.broken_image_rounded,
         size: 32,
@@ -153,8 +153,8 @@ class _GameItem extends StatelessWidget {
       );
     } else {
       return Image.network(
-        game.gameCover!,
-        fit: BoxFit.cover,
+        game.gameCover,
+        fit: BoxFit.contain,
 
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;

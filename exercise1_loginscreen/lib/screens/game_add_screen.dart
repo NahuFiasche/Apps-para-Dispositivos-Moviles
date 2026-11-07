@@ -15,8 +15,9 @@ class GameAddScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Agregar Nuevo Juego')),
       body: _AddScreenBody(),
     );
+  }
 }
-}
+
 class _AddScreenBody extends ConsumerStatefulWidget {
   @override
   ConsumerState<_AddScreenBody> createState() {
@@ -33,9 +34,7 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final results = await SteamGamesService.instance.searchGames(query);
@@ -46,9 +45,7 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('No se pudieron buscar juegos: $error')),
       );
@@ -57,24 +54,16 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
 
   Future<void> _onAddGame(Map<String, dynamic> game) async {
     // Los resultados de storesearch traen pocos datos: pedimos los detalles
-    // completos (descripción, developers, año, screenshots) antes de guardar.
+    // (portada, descripción y año) antes de guardar.
     final details = await SteamGamesService.instance.getGameDetails(game);
-
-    final releaseYear = (details['released'] as String?) ?? '';
-    final yearOnly = releaseYear.length >= 4
-        ? releaseYear.substring(0, 4)
-        : releaseYear;
-    final images = List<String>.from(details['images'] ?? const []);
 
     final newGame = Game(
       id: '', // Firestore genera el id en insertGame.
       title: details['name'] ?? 'Sin nombre',
-      developer: details['developers'] ?? '',
-      releaseYear: yearOnly,
-      plattform: details['platform'] ?? '',
-      description: details['overview'] ?? '',
-      gameCover: images.isNotEmpty ? images.first : '',
-      gameImages: images,
+      releaseYear: details['releaseYear'] ?? '',
+      developer: details['developer'] ?? '',
+      description: details['description'] ?? '',
+      gameCover: details['gameCover'] ?? '',
     );
 
     try {
@@ -99,59 +88,51 @@ class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Nombre del juego (ej. Witcher 3)',
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _onSearch,
-                ),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              labelText: 'Nombre del juego (ej. Witcher 3)',
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: _onSearch,
               ),
-              onSubmitted: (_) => _onSearch(),
             ),
-            const SizedBox(height: 16),
+            onSubmitted: (_) => _onSearch(),
+          ),
+          const SizedBox(height: 16),
 
-            if (_isLoading)
-              const CircularProgressIndicator()
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _searchResults.length,
-                  itemBuilder: (context, index) {
-                    final game = _searchResults[index];
-                    return ListTile(
-                      leading: game['background_image'] != ''
-                          ? Image.network(
-                              game['background_image'],
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                            )
-                          : const Icon(Icons.videogame_asset),
-                      title: Text(game['name']),
-                      subtitle: Text(
-                        'Lanzamiento: ${game['released']}  |  '
-                        'Plataforma: ${game['platform']}',
-                      ),
-                      isThreeLine: true,
-                      trailing: IconButton(
-                        icon: const Icon(Icons.add_circle, color: Colors.green),
-                        onPressed: () => _onAddGame(game),
-                      ),
-                    );
-                  },
-                ),
+          if (_isLoading)
+            const CircularProgressIndicator()
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: _searchResults.length,
+                itemBuilder: (context, index) {
+                  final game = _searchResults[index];
+                  return ListTile(
+                    leading: (game['tiny_image'] as String? ?? '').isNotEmpty
+                        ? Image.network(
+                            game['tiny_image'],
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          )
+                        : const Icon(Icons.videogame_asset),
+                    title: Text(game['name']),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.add_circle, color: Colors.green),
+                      onPressed: () => _onAddGame(game),
+                    ),
+                  );
+                },
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
-  }
+}

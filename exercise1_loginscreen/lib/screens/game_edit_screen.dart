@@ -3,223 +3,112 @@ import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:exercise1_loginscreen/widgets/section_label.dart';
 
-class GameEditScreen extends StatelessWidget {
+class GameEditScreen extends ConsumerStatefulWidget {
   static const String name = 'editGame_screen';
   final Game game;
 
   const GameEditScreen({super.key, required this.game});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Editar Juego')),
-      body: _EditScreenBody(game: game),
-    );
-  }
+  ConsumerState<GameEditScreen> createState() => _GameEditScreenState();
 }
 
-class _EditScreenBody extends ConsumerStatefulWidget {
-  final Game game;
-
-  const _EditScreenBody({required this.game});
-
-  @override
-  ConsumerState<_EditScreenBody> createState() {
-    return _EditScreenBodyState();
-  }
-}
-
-class _EditScreenBodyState extends ConsumerState<_EditScreenBody> {
+class _GameEditScreenState extends ConsumerState<GameEditScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  Game get game => widget.game;
-
   late final TextEditingController _titleController = TextEditingController(
-    text: game.title,
-  );
-  late final TextEditingController _developerController = TextEditingController(
-    text: game.developer,
+    text: widget.game.title,
   );
   late final TextEditingController _releaseYearController =
-      TextEditingController(text: game.releaseYear);
-  late final TextEditingController _plattformController = TextEditingController(
-    text: game.plattform,
-  );
+      TextEditingController(text: widget.game.releaseYear);
+  late final TextEditingController _developerController =
+      TextEditingController(text: widget.game.developer);
   late final TextEditingController _descriptionController =
-      TextEditingController(text: game.description);
+      TextEditingController(text: widget.game.description);
   late final TextEditingController _gameCoverController = TextEditingController(
-    text: game.gameCover ?? '',
+    text: widget.game.gameCover,
   );
-  late final TextEditingController _gameImagesController =
-      TextEditingController(text: game.gameImages.join(', '));
 
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
+  void _saveChanges() {
+    if (_formKey.currentState?.validate() != true) return;
 
-    return Form(
-      key: _formKey,
-      child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          SectionLabel(text: 'Información', colorScheme: colorScheme),
-
-          _EditField(
-            labelText: 'Título',
-            icon: Icons.sports_esports_rounded,
-            controller: _titleController,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            validator: _requiredValidator,
-          ),
-
-          _EditField(
-            labelText: 'Desarrollador',
-            icon: Icons.business_rounded,
-            controller: _developerController,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            validator: _requiredValidator,
-          ),
-
-          _EditField(
-            labelText: 'Año de lanzamiento',
-            icon: Icons.calendar_today_rounded,
-            controller: _releaseYearController,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            keyboardType: TextInputType.number,
-            validator: _requiredValidator,
-          ),
-
-          _EditField(
-            labelText: 'Plataforma',
-            icon: Icons.videogame_asset_rounded,
-            controller: _plattformController,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            validator: _requiredValidator,
-          ),
-
-          SectionLabel(text: 'Descripción', colorScheme: colorScheme),
-
-          _EditField(
-            labelText: 'Descripción del juego',
-            icon: Icons.description_rounded,
-            controller: _descriptionController,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            maxLines: 5,
-            validator: _requiredValidator,
-          ),
-
-          SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
-
-          _EditField(
-            labelText: 'URL de la portada',
-            icon: Icons.image_rounded,
-            controller: _gameCoverController,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-          ),
-
-          _EditField(
-            labelText: 'URLs de capturas (separadas por coma)',
-            icon: Icons.collections_rounded,
-            controller: _gameImagesController,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            maxLines: 3,
-          ),
-
-          const SizedBox(height: 24),
-
-          FilledButton.icon(
-            label: const Text('Guardar Cambios'),
-            icon: const Icon(Icons.save_rounded),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-            onPressed: () => _saveChanges(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String? _requiredValidator(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-    return null;
-  }
-
-  void _saveChanges(BuildContext context) {
-    if (_formKey.currentState?.validate() == false) {
-      return;
-    }
-
-    final String gameCover = _gameCoverController.text.trim();
-    final List<String> gameImages = _gameImagesController.text
-        .split(',')
-        .map((String url) => url.trim())
-        .where((String url) => url.isNotEmpty)
-        .toList();
-
-    final Game updatedGame = Game(
-      id: game.id,
+    final updatedGame = Game(
+      id: widget.game.id,
       title: _titleController.text.trim(),
-      developer: _developerController.text.trim(),
       releaseYear: _releaseYearController.text.trim(),
-      plattform: _plattformController.text.trim(),
+      developer: _developerController.text.trim(),
       description: _descriptionController.text.trim(),
-      gameCover: gameCover.isEmpty ? null : gameCover,
-      gameImages: gameImages,
+      gameCover: _gameCoverController.text.trim(),
     );
 
     ref.read(gamesProvider.notifier).updateGame(updatedGame);
     context.pop();
   }
-}
-
-class _EditField extends StatelessWidget {
-  final String labelText;
-  final IconData icon;
-  final TextEditingController controller;
-  final TextTheme textTheme;
-  final ColorScheme colorScheme;
-  final int? maxLines;
-  final TextInputType? keyboardType;
-  final String? Function(String?)? validator;
-
-  const _EditField({
-    required this.labelText,
-    required this.icon,
-    required this.controller,
-    required this.textTheme,
-    required this.colorScheme,
-    this.maxLines = 1,
-    this.keyboardType,
-    this.validator,
-  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        validator: validator,
-        style: textTheme.bodyMedium,
-        decoration: InputDecoration(
-          labelText: labelText,
-          prefixIcon: Icon(icon, size: 20, color: colorScheme.primary),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Editar Juego')),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            TextFormField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Título',
+                prefixIcon: Icon(Icons.sports_esports_rounded),
+              ),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? 'Campo obligatorio'
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _releaseYearController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Año de lanzamiento',
+                prefixIcon: Icon(Icons.calendar_today_rounded),
+              ),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? 'Campo obligatorio'
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _developerController,
+              decoration: const InputDecoration(
+                labelText: 'Desarrollador',
+                prefixIcon: Icon(Icons.engineering_rounded),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _gameCoverController,
+              decoration: const InputDecoration(
+                labelText: 'URL de la portada',
+                prefixIcon: Icon(Icons.image_rounded),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _descriptionController,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'Descripción',
+                prefixIcon: Icon(Icons.description_rounded),
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              label: const Text('Guardar Cambios'),
+              icon: const Icon(Icons.save_rounded),
+              onPressed: _saveChanges,
+            ),
+          ],
         ),
       ),
     );

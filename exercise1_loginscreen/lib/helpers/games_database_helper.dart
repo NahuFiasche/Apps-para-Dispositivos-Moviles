@@ -43,12 +43,10 @@ class GamesDatabaseHelper {
   Map<String, dynamic> _gameToMap(Game game) {
     return {
       'title': game.title,
-      'developer': game.developer,
       'releaseYear': game.releaseYear,
-      'plattform': game.plattform,
+      'developer': game.developer,
       'description': game.description,
       'gameCover': game.gameCover,
-      'gameImages': game.gameImages,
     };
   }
 
@@ -58,12 +56,10 @@ class GamesDatabaseHelper {
     return Game(
       id: doc.id,
       title: data['title'] ?? '',
-      developer: data['developer'] ?? '',
       releaseYear: data['releaseYear'] ?? '',
-      plattform: data['plattform'] ?? '',
+      developer: data['developer'] ?? '',
       description: data['description'] ?? '',
-      gameCover: data['gameCover'],
-      gameImages: List<String>.from(data['gameImages'] ?? []),
+      gameCover: data['gameCover'] ?? '',
     );
   }
 }

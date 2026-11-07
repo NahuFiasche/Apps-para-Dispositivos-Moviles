@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:exercise1_loginscreen/providers/games_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:collection/collection.dart';
-import 'package:exercise1_loginscreen/widgets/section_label.dart';
 
 class GameDetailScreen extends ConsumerWidget {
   static const String name = 'gameDetail_screen';
@@ -23,10 +22,17 @@ class GameDetailScreen extends ConsumerWidget {
           (game) => game.id == gameId,
         );
 
+        if (game == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('No encontrado')),
+            body: const Center(child: Text('El juego no existe.')),
+          );
+        }
+
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              game!.title,
+              game.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -69,45 +75,45 @@ class _GameDetailBody extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
       children: [
-        SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
-
-        SizedBox(
-          height: 280,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: game.gameImages.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (BuildContext context, int index) {
-              final String gameImage = game.gameImages[index];
-              return _GameScreenshots(gameScreenshot: gameImage);
-            },
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: AspectRatio(
+            // La caratula de Steam (library_600x900) es vertical 2:3.
+            aspectRatio: 2 / 3,
+            child: _GameImage(url: game.gameCover),
           ),
         ),
 
-        SectionLabel(text: 'Información', colorScheme: colorScheme),
+        const SizedBox(height: 16),
 
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _InfoChip(
-              icon: Icons.business_rounded,
-              label: game.developer,
-            ),
-            _InfoChip(
-              icon: Icons.calendar_today_rounded,
-              label: game.releaseYear,
-            ),
-            _InfoChip(
-              icon: Icons.sports_esports_rounded,
-              label: game.plattform,
-            ),
-          ],
+        Chip(
+          avatar: Icon(
+            Icons.calendar_today_rounded,
+            size: 18,
+            color: colorScheme.primary,
+          ),
+          label: Text(game.releaseYear, style: textTheme.bodyMedium),
+          backgroundColor: colorScheme.surfaceContainerHigh,
+          side: BorderSide.none,
         ),
 
-        SectionLabel(text: 'Descripción', colorScheme: colorScheme),
+        const SizedBox(height: 8),
+
+        if (game.developer.isNotEmpty)
+          Chip(
+            avatar: Icon(
+              Icons.engineering_rounded,
+              size: 18,
+              color: colorScheme.primary,
+            ),
+            label: Text(game.developer, style: textTheme.bodyMedium),
+            backgroundColor: colorScheme.surfaceContainerHigh,
+            side: BorderSide.none,
+          ),
+
+        const SizedBox(height: 16),
 
         Card(
           elevation: 0,
@@ -124,7 +130,7 @@ class _GameDetailBody extends StatelessWidget {
           ),
         ),
 
-        SectionLabel(text: 'Configuración', colorScheme: colorScheme),
+        const SizedBox(height: 16),
 
         Row(
           children: [
@@ -141,11 +147,7 @@ class _GameDetailBody extends StatelessWidget {
             const SizedBox(width: 12),
 
             Expanded(
-              child: _DeleteButton(
-                colorScheme: colorScheme,
-                textTheme: textTheme,
-                game: game,
-              ),
+              child: _DeleteButton(colorScheme: colorScheme, game: game),
             ),
           ],
         ),
@@ -155,147 +157,90 @@ class _GameDetailBody extends StatelessWidget {
 }
 
 class _DeleteButton extends ConsumerWidget {
-  const _DeleteButton({
-    required this.colorScheme,
-    required this.textTheme,
-    required this.game,
-  });
-
   final ColorScheme colorScheme;
-  final TextTheme textTheme;
   final Game game;
+
+  const _DeleteButton({required this.colorScheme, required this.game});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return TextButton.icon(
-      label: Text('Borrar'),
-      icon: Icon(Icons.delete_outlined),
+      label: const Text('Borrar'),
+      icon: const Icon(Icons.delete_outlined),
       style: OutlinedButton.styleFrom(
         foregroundColor: colorScheme.error,
         side: BorderSide(color: colorScheme.error),
       ),
-      onPressed: (() {
+      onPressed: () {
         showDialog(
           barrierDismissible: false,
           context: context,
           builder: (BuildContext context) {
-            return PopScope(
-              canPop: false,
-
-              child: AlertDialog(
-                icon: Icon(
-                  Icons.delete_forever_rounded,
-                  color: colorScheme.error,
-                  size: 32,
-                ),
-
-                title: Text(
-                  '¿Eliminar Juego?',
-                  textAlign: TextAlign.center,
-                  style: textTheme.headlineSmall,
-                ),
-
-                content: Text(
-                  'La acción de eliminar un Juego no se puede deshacer.',
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-
-                actions: [
-                  TextButton(
-                    onPressed: (() {
-                      Navigator.of(context).pop();
-                    }),
-                    child: const Text('Cancelar'),
-                  ),
-
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colorScheme.error,
-                      foregroundColor: colorScheme.onError,
-                    ),
-                    onPressed: (() {
-                      ref.read(gamesProvider.notifier).deleteGame(game.id);
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    }),
-                    child: const Text('Borrar'),
-                  ),
-                ],
+            return AlertDialog(
+              icon: Icon(
+                Icons.delete_forever_rounded,
+                color: colorScheme.error,
+                size: 32,
               ),
+              title: const Text(
+                '¿Eliminar Juego?',
+                textAlign: TextAlign.center,
+              ),
+              content: const Text(
+                'La acción de eliminar un Juego no se puede deshacer.',
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.error,
+                    foregroundColor: colorScheme.onError,
+                  ),
+                  onPressed: () {
+                    ref.read(gamesProvider.notifier).deleteGame(game.id);
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Borrar'),
+                ),
+              ],
             );
           },
         );
-      }),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Chip(
-      avatar: Icon(icon, size: 18, color: colorScheme.primary),
-      label: Text(label, style: textTheme.bodyMedium),
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      side: BorderSide.none,
-    );
-  }
-}
-
-class _GameScreenshots extends StatelessWidget {
-  const _GameScreenshots({
-    required this.gameScreenshot,
-  });
-
-  final String gameScreenshot;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: getGameImage(),
-      ),
-    );
-  }
-
-  Widget getGameImage() {
-    return Image.network(
-      gameScreenshot,
-      fit: BoxFit.cover,
-
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-            ),
-          ),
-        );
       },
+    );
+  }
+}
 
+class _GameImage extends StatelessWidget {
+  final String url;
+
+  const _GameImage({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    if (url.isEmpty) {
+      return const Icon(
+        Icons.broken_image_rounded,
+        size: 32,
+        color: Colors.grey,
+      );
+    }
+
+    return Image.network(
+      url,
+      // contain: la caratula vertical llena el AspectRatio 2:3 completa y
+      // una imagen apaisada se ve con espacio arriba y abajo.
+      fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return const Center(
-          child: Icon(
-            Icons.broken_image_rounded,
-            size: 32,
-            color: Colors.grey,
-          ),
+        return const Icon(
+          Icons.broken_image_rounded,
+          size: 32,
+          color: Colors.grey,
         );
       },
     );
