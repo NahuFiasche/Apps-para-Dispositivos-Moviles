@@ -68,7 +68,7 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
                           leading: const Icon(Icons.photo_library_rounded),
                           title: const Text('Elegir de la galería'),
                           onTap: () async {
-                            Navigator.pop(context); // Cierra el menú
+                            Navigator.pop(context); 
                             final image = await ImagePicker().pickImage(
                               source: ImageSource.gallery,
                             );
@@ -176,7 +176,7 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            onPressed: () => _saveUser(context),
+            onPressed: () => _createUser(context),
           ),
         ],
       ),
@@ -215,7 +215,7 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     }
   }
 
-  void _saveUser(BuildContext context) async {
+  void _createUser(BuildContext context) async {
     if (_formKey.currentState?.validate() == false) {
       return;
     }
@@ -223,9 +223,10 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
     final String newMail = _newMailController.text.trim();
     final String newPassword = _newPasswordController.text.trim();
 
-    final String? returnString = await UsersProvider.instance.createUser(
+    final String? returnString = await UsersProvider.instance.signUp(
       newMail: newMail,
       newPassword: newPassword,
+      newProfilePicture: _selectedProfileImage?.path
     );
 
     if (!context.mounted) return;

@@ -1,4 +1,4 @@
-import 'package:exercise1_loginscreen/database_helpers/games_database_helper.dart';
+import 'package:exercise1_loginscreen/helpers/games_database_helper.dart';
 import 'package:exercise1_loginscreen/entities/games.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

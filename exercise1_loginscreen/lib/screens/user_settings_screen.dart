@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:exercise1_loginscreen/screens/login_screen.dart';
 import 'package:exercise1_loginscreen/screens/user_edit_screen.dart';
@@ -126,13 +124,24 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
 
     if (image == null) return;
 
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
     final String? errorMessage = await UsersProvider.instance
         .updateProfilePicture(
-          username: widget.usermail,
-          newProfilePicture: image.path,
+          imagePath: image.path,
         );
 
     if (!mounted) return;
+
+    Navigator.of(context).pop();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -150,6 +159,10 @@ class UserSettingsBodyState extends ConsumerState<UserSettingsBody> {
         ),
       ),
     );
+
+    if (errorMessage == null) {
+      setState(() {});
+    }
   }
 }
 
@@ -193,15 +206,6 @@ class _AccountDetails extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          ListTile(
-            leading: Icon(
-              Icons.person_rounded,
-              color: colorScheme.primary,
-            ),
-            title: const Text('Nombre de usuario'),
-            subtitle: Text(widget.usermail),
-          ),
-
           ListTile(
             leading: Icon(
               Icons.mail_rounded,
@@ -332,28 +336,53 @@ class _ProfilePicture extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final String? profilePath = UsersProvider.instance.getProfilePicture(
-      username,
-    );
-    final hasImage =
-        profilePath != null &&
-        profilePath.isNotEmpty &&
-        File(profilePath).existsSync();
+    final String? profileUrl = UsersProvider.instance.getProfilePicture();
+
+    final hasImage = profileUrl != null && profileUrl.isNotEmpty;
 
     return IconButton(
       iconSize: 90,
       onPressed: onTap,
-      icon: CircleAvatar(
-        radius: 45,
-        backgroundColor: colorScheme.primaryContainer,
-        backgroundImage: hasImage ? FileImage(File(profilePath)) : null,
-        child: !hasImage
-            ? Icon(
-                Icons.person_rounded,
-                size: 45,
-                color: colorScheme.primary,
-              )
-            : null,
+      icon: SizedBox(
+        width: 90,
+        height: 90,
+        child: ClipOval(
+          child: ColoredBox(
+            color: colorScheme.primaryContainer,
+            child: hasImage
+                ? Image.network(
+                    profileUrl,
+                    fit: BoxFit.cover,
+
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      );
+                    },
+
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.person_rounded,
+                        size: 45,
+                        color: colorScheme.primary,
+                      );
+                    },
+                  )
+                : Icon(
+                    Icons.person_rounded,
+                    size: 45,
+                    color: colorScheme.primary,
+                  ),
+          ),
+        ),
       ),
     );
   }

@@ -42,7 +42,6 @@ class UsersDatabaseHelper {
 
       await user.delete();
 
-      //TODO: Si también subiste su foto a Storage, podés aprovechar este momento para borrarla de la carpeta usando su UID antes o después de esto.
     } catch (e) {
       throw Exception('Error al eliminar la cuenta: ${e.toString()}');
     }

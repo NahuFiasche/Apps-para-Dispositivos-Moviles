@@ -1,6 +1,7 @@
 import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:exercise1_loginscreen/screens/game_library_screen.dart';
 import 'package:exercise1_loginscreen/screens/user_add_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +32,7 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _googleLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +128,36 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
+
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: _GoogleSignInButton(
+                loading: _googleLoading,
+                onPressed: _googleLoading ? null : _signInWithGoogle,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'o',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const Expanded(child: Divider()),
+              ],
+            ),
+
+            const SizedBox(height: 24),
 
             _CreateAccountButton(
               textTheme: textTheme,
@@ -136,6 +167,40 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
         ),
       ),
     );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    final theme = Theme.of(context);
+
+    setState(() => _googleLoading = true);
+
+    final String? errorMessage = await UsersProvider.instance.signInWithGoogle();
+
+    if (!mounted) return;
+
+    setState(() => _googleLoading = false);
+
+    if (errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          width: 320,
+          content: Text(
+            errorMessage,
+            style: TextStyle(color: theme.colorScheme.onError),
+          ),
+          backgroundColor: theme.colorScheme.error,
+        ),
+      );
+      return;
+    }
+
+    final email = FirebaseAuth.instance.currentUser?.email ?? '';
+
+    if (!mounted) return;
+
+    context.goNamed(GamesLibraryScreen.name, extra: email);
   }
 
   Future<void> _login(BuildContext context) async {
@@ -167,6 +232,64 @@ class _LoginBodyBuilderState extends ConsumerState<LoginBodyBuilder> {
     }
 
     context.goNamed(GamesLibraryScreen.name, extra: emailController.text);
+  }
+}
+
+class _GoogleSignInButton extends StatelessWidget {
+  const _GoogleSignInButton({
+    required this.loading,
+    required this.onPressed,
+  });
+
+  final bool loading;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+
+    // Colores según las guías de marca de Google para botones
+    // "Sign in with Google" en tema claro y oscuro:
+    final Color backgroundColor = isDark ? const Color(0xFF131314) : Colors.white;
+    final Color textColor = isDark ? const Color(0xFFE3E3E3) : const Color(0xFF1F1F1F);
+    final Color borderColor = isDark ? const Color(0xFF8E918F) : const Color(0xFF747775);
+
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        side: BorderSide(color: borderColor),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      child: loading
+          ? const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/google_logo.png',
+                  width: 20,
+                  height: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Continuar con Google',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
+                ),
+              ],
+            ),
+    );
   }
 }
 

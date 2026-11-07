@@ -1,9 +1,8 @@
 import 'package:exercise1_loginscreen/entities/games.dart';
+import 'package:exercise1_loginscreen/helpers/games_api_service_helper.dart';
 import 'package:exercise1_loginscreen/providers/games_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:exercise1_loginscreen/widgets/section_label.dart';
 
 class GameAddScreen extends StatelessWidget {
   static const String name = 'addGame_screen';
@@ -16,9 +15,8 @@ class GameAddScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Agregar Nuevo Juego')),
       body: _AddScreenBody(),
     );
-  }
 }
-
+}
 class _AddScreenBody extends ConsumerStatefulWidget {
   @override
   ConsumerState<_AddScreenBody> createState() {
@@ -27,183 +25,133 @@ class _AddScreenBody extends ConsumerStatefulWidget {
 }
 
 class _AddScreenBodyState extends ConsumerState<_AddScreenBody> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isLoading = false;
 
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _developerController = TextEditingController();
-  final TextEditingController _releaseYearController = TextEditingController();
-  final TextEditingController _plattformController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _gameCoverController = TextEditingController();
-  final TextEditingController _gameImagesController = TextEditingController();
+  Future<void> _onSearch() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final results = await SteamGamesService.instance.searchGames(query);
+      if (!mounted) return;
+      setState(() {
+        _searchResults = results;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudieron buscar juegos: $error')),
+      );
+    }
+  }
+
+  Future<void> _onAddGame(Map<String, dynamic> game) async {
+    // Los resultados de storesearch traen pocos datos: pedimos los detalles
+    // completos (descripción, developers, año, screenshots) antes de guardar.
+    final details = await SteamGamesService.instance.getGameDetails(game);
+
+    final releaseYear = (details['released'] as String?) ?? '';
+    final yearOnly = releaseYear.length >= 4
+        ? releaseYear.substring(0, 4)
+        : releaseYear;
+    final images = List<String>.from(details['images'] ?? const []);
+
+    final newGame = Game(
+      id: '', // Firestore genera el id en insertGame.
+      title: details['name'] ?? 'Sin nombre',
+      developer: details['developers'] ?? '',
+      releaseYear: yearOnly,
+      plattform: details['platform'] ?? '',
+      description: details['overview'] ?? '',
+      gameCover: images.isNotEmpty ? images.first : '',
+      gameImages: images,
+    );
+
+    try {
+      await ref.read(gamesProvider.notifier).addGame(newGame);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Juego agregado: ${newGame.title}')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo agregar el juego: $error')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
 
-    return Form(
-      key: _formKey,
-      child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          SectionLabel(text: 'Información', colorScheme: colorScheme),
-
-          _EditField(
-            labelText: 'Título',
-            icon: Icons.sports_esports_rounded,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            controller: _titleController,
-            validator: _requiredValidator,
-          ),
-
-          _EditField(
-            labelText: 'Desarrollador',
-            icon: Icons.business_rounded,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            controller: _developerController,
-            validator: _requiredValidator,
-          ),
-
-          _EditField(
-            labelText: 'Año de lanzamiento',
-            icon: Icons.calendar_today_rounded,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            keyboardType: TextInputType.number,
-            controller: _releaseYearController,
-            validator: _requiredValidator,
-          ),
-
-          _EditField(
-            labelText: 'Plataforma',
-            icon: Icons.videogame_asset_rounded,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            controller: _plattformController,
-            validator: _requiredValidator,
-          ),
-
-          SectionLabel(text: 'Descripción', colorScheme: colorScheme),
-
-          _EditField(
-            labelText: 'Descripción del juego',
-            icon: Icons.description_rounded,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            maxLines: 5,
-            controller: _descriptionController,
-            validator: _requiredValidator,
-          ),
-
-          SectionLabel(text: 'Imágenes', colorScheme: colorScheme),
-
-          _EditField(
-            labelText: 'URL de la portada',
-            icon: Icons.image_rounded,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            controller: _gameCoverController,
-          ),
-
-          _EditField(
-            labelText: 'URLs de capturas (separadas por coma)',
-            icon: Icons.collections_rounded,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-            maxLines: 3,
-            controller: _gameImagesController,
-          ),
-
-          const SizedBox(height: 24),
-
-          FilledButton.icon(
-            label: const Text('Guardar Cambios'),
-            icon: const Icon(Icons.save_rounded),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Nombre del juego (ej. Witcher 3)',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: _onSearch,
+                ),
+              ),
+              onSubmitted: (_) => _onSearch(),
             ),
-            onPressed: () => _saveChanges(context),
-          ),
-        ],
-      ),
-    );
-  }
+            const SizedBox(height: 16),
 
-  String? _requiredValidator(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-    return null;
-  }
-
-  void _saveChanges(BuildContext context) {
-    if (_formKey.currentState?.validate() == false) {
-      return;
-    }
-
-    final List<String> gameImages = _gameImagesController.text
-        .split(',')
-        .map((String url) => url.trim())
-        .where((String url) => url.isNotEmpty)
-        .toList();
-
-    final Game newGame = Game(
-      id: '',
-      title: _titleController.text.trim(),
-      developer: _developerController.text.trim(),
-      releaseYear: _releaseYearController.text.trim(),
-      plattform: _plattformController.text.trim(),
-      description: _descriptionController.text.trim(),
-      gameCover: _gameCoverController.text.trim(),
-      gameImages: gameImages,
-    );
-
-    ref.read(gamesProvider.notifier).addGame(newGame);
-
-    context.pop();
-  }
-}
-
-class _EditField extends StatelessWidget {
-  final String labelText;
-  final IconData icon;
-  final TextTheme textTheme;
-  final ColorScheme colorScheme;
-  final int? maxLines;
-  final TextInputType? keyboardType;
-  final TextEditingController controller;
-  final String? Function(String?)? validator;
-
-  const _EditField({
-    required this.labelText,
-    required this.icon,
-    required this.textTheme,
-    required this.colorScheme,
-    required this.controller,
-    this.maxLines = 1,
-    this.keyboardType,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        validator: validator,
-        style: textTheme.bodyMedium,
-        decoration: InputDecoration(
-          labelText: labelText,
-          prefixIcon: Icon(icon, size: 20, color: colorScheme.primary),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            if (_isLoading)
+              const CircularProgressIndicator()
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _searchResults.length,
+                  itemBuilder: (context, index) {
+                    final game = _searchResults[index];
+                    return ListTile(
+                      leading: game['background_image'] != ''
+                          ? Image.network(
+                              game['background_image'],
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            )
+                          : const Icon(Icons.videogame_asset),
+                      title: Text(game['name']),
+                      subtitle: Text(
+                        'Lanzamiento: ${game['released']}  |  '
+                        'Plataforma: ${game['platform']}',
+                      ),
+                      isThreeLine: true,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add_circle, color: Colors.green),
+                        onPressed: () => _onAddGame(game),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
-}
+  }

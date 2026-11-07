@@ -4,9 +4,10 @@ import 'package:exercise1_loginscreen/router/router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'firebase_options.dart'; 
 
-void main() async{
+import 'firebase_options.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -28,7 +29,6 @@ class MainApp extends ConsumerWidget {
       theme: mainAppTheme.themeLight,
       darkTheme: mainAppTheme.themeDark,
       themeMode: mainAppTheme.themeMode,
-      
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:exercise1_loginscreen/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,7 +47,6 @@ class DrawerMenuState extends ConsumerState<DrawerMenu> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               _ProfilePicture(
-                username: widget.usermail,
                 colorScheme: colorScheme,
               ),
 
@@ -91,60 +91,57 @@ class DrawerMenuState extends ConsumerState<DrawerMenu> {
   }
 }
 
-class _ProfilePicture extends ConsumerWidget {
-  final String username;
+class _ProfilePicture extends StatelessWidget {
   final ColorScheme colorScheme;
 
-  const _ProfilePicture({required this.username, required this.colorScheme});
+  const _ProfilePicture({required this.colorScheme});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Placeholder();
-    //TODO: Implementar
-    /*
-    final usersAsync = ref.watch(usersProvider);
-    return usersAsync.when(
-      data: (users) {
-        final String? profilePath = ref
-            .read(usersProvider.notifier)
-            .getProfilePicture(username);
+  Widget build(BuildContext context) {
+    final String? profileUrl = UsersProvider.instance.getProfilePicture();
 
-        final hasImage =
-            profilePath != null &&
-            profilePath.isNotEmpty &&
-            File(profilePath).existsSync();
+    final hasImage = profileUrl != null && profileUrl.isNotEmpty;
 
-        return CircleAvatar(
-          radius: 28,
-          backgroundColor: colorScheme.primary,
-          backgroundImage: hasImage ? FileImage(File(profilePath)) : null,
-          child: !hasImage
-              ? Icon(
+    return SizedBox(
+      width: 56, 
+      height: 56,
+      child: ClipOval(
+        child: ColoredBox(
+          color: colorScheme.primary,
+          child: hasImage
+              ? Image.network(
+                  profileUrl,
+                  fit: BoxFit.cover,
+
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child; // Ya cargó, muestra la imagen
+                    return Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.onPrimary,
+                        ),
+                      ),
+                    );
+                  },
+
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.person_rounded,
+                      size: 36,
+                      color: colorScheme.onPrimary,
+                    );
+                  },
+                )
+              : Icon(
                   Icons.person_rounded,
                   size: 36,
                   color: colorScheme.onPrimary,
-                )
-              : null,
-        );
-      },
-      loading: () => CircleAvatar(
-        radius: 28,
-        backgroundColor: colorScheme.primary,
-        child: const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
+                ),
         ),
       ),
-      error: (error, stack) => CircleAvatar(
-        radius: 28,
-        backgroundColor: colorScheme.primary,
-        child: Icon(
-          Icons.person_rounded,
-          size: 36,
-          color: colorScheme.onPrimary,
-        ),
-      ),
-    );*/
+    );
   }
 }

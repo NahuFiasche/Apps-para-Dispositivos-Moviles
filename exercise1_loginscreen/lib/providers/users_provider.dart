@@ -1,5 +1,9 @@
-import 'package:exercise1_loginscreen/database_helpers/users_database_helper.dart';
+import 'dart:io';
+
+import 'package:exercise1_loginscreen/helpers/users_database_helper.dart';
+import 'package:exercise1_loginscreen/helpers/users_storage_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class UsersProvider {
   static final UsersProvider instance = UsersProvider._internal();
@@ -28,15 +32,75 @@ class UsersProvider {
     return null;
   }
 
-  Future<String?> createUser({
+Future<String?> signInWithGoogle() async {
+    try {
+      final googleSignIn = GoogleSignIn.instance;
+
+      // serverClientId = Web client ID de OAuth (Firebase Console -> Authentication
+      // -> Sign-in method -> Google). Es obligatorio en Android con google_sign_in v7.
+      await googleSignIn.initialize(
+        serverClientId: '589594551779-1eh07u3g3s3129i1g7ttknjnk6nfc2pj.apps.googleusercontent.com',
+      );
+
+      final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
+
+      final idToken = googleUser.authentication.idToken;
+
+      final credential = GoogleAuthProvider.credential(idToken: idToken);
+
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final user = userCredential.user;
+      if (user != null && user.photoURL == null && googleUser.photoUrl != null) {
+        final photoUrl = await UsersStorageHelper.instance.uploadProfilePictureFromUrl(
+          user.uid,
+          googleUser.photoUrl!,
+        );
+        await user.updatePhotoURL(photoUrl);
+      }
+
+      return null; 
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        // El usuario canceló el login (cerró el popup)
+        return 'Inicio de sesión cancelado';
+      }
+      return 'Error al iniciar sesión con Google: ${e.description ?? e.code}';
+    } on FirebaseAuthException catch (e) {
+      return switch (e.code) {
+        'account-exists-with-different-credential' => 'Ya existe una cuenta con este correo pero con otro método de acceso.',
+        'invalid-credential' => 'Las credenciales de Google no son válidas.',
+        _ => 'Error de autenticación con Google: ${e.message ?? e.code}',
+      };
+    } catch (e) {
+      return 'Error al iniciar sesión con Google: ${e.toString()}';
+    }
+  }
+
+  Future<String?> signUp({
     required String newMail,
     required String newPassword,
     String? newProfilePicture,
   }) async {
-    //TODO: Implementar carga de Imagen de Perfil en Firebase Storage
 
     try {
       await UsersDatabaseHelper.instance.createAccount(newMail, newPassword);
+
+      if (newProfilePicture != null && newProfilePicture.isNotEmpty) {
+      final user = FirebaseAuth.instance.currentUser;
+      
+      if (user != null) {
+        File imageFile = File(newProfilePicture);
+
+        final downloadUrl = await UsersStorageHelper.instance.uploadProfilePicture(
+          user.uid,
+          imageFile,
+        );
+
+        await user.updatePhotoURL(downloadUrl);
+        }
+      }
+
     } on FirebaseAuthException catch (e) {
       return switch (e.code) {
         'email-already-in-use' => 'El mail ya está registrado',
@@ -48,8 +112,8 @@ class UsersProvider {
         _ => 'Error al crear el usuario: ${e.message ?? e.code}',
       };
     } catch (e) {
-      return 'Error al crear el usuario: ${e.toString()}';
-    }
+      return 'Error al crear el usuario o subir la imagen: ${e.toString()}';    
+      }
 
     return null;
   }
@@ -74,36 +138,10 @@ class UsersProvider {
     return null;
   }
 
-  Future<String?> updateProfilePicture({
-    required String username,
-    required String newProfilePicture,
-  }) async {
-    //TODO: Manejo de Profile Picture
-    /*
-    final usersList = await future;
-
-    final currentUser = usersList.firstWhereOrNull(
-      (u) => u.username.trim() == username.trim(),
-    );
-
-    if (currentUser == null) {
-      return 'Error. No se encontró el usuario a actualizar';
-    }
-
-    state = await AsyncValue.guard(() async {
-      final UserData updatedUser = currentUser.copyWith(
-        profilePicture: newProfilePicture,
-      );
-
-      await UsersDatabaseHelper.instance.updateUser(updatedUser);
-
-      return await UsersDatabaseHelper.instance.getUsers();
-    });*/
-
-    return null;
-  }
-
   Future<void> deleteUser() async {
+          final user = FirebaseAuth.instance.currentUser;
+    await UsersStorageHelper.instance.deleteProfilePicture(user!.uid);
+
     await UsersDatabaseHelper.instance.deleteAccount();
   }
 
@@ -124,16 +162,32 @@ class UsersProvider {
     return null;
   }
 
-  String? getProfilePicture(String username) {
-    /*final currentUsers = state.value ?? [];
-    final usernameToFind = username.trim();
+  Future<String?> updateProfilePicture({required String imagePath}) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        return 'No hay un usuario activo para actualizar la foto.';
+      }
 
-    final userProfilePicture = currentUsers.firstWhereOrNull(
-      (u) => u.username.trim() == usernameToFind,
-    );
+      File imageFile = File(imagePath);
 
-    return userProfilePicture?.profilePicture;*/
-    //TODO: Implementar getProfilePicture
-    return null;
+      final downloadUrl = await UsersStorageHelper.instance.uploadProfilePicture(
+        user.uid,
+        imageFile,
+      );
+
+      await user.updatePhotoURL(downloadUrl);
+
+      await user.reload();
+
+      return null; 
+    } catch (e) {
+      return 'Error al subir la imagen de perfil: ${e.toString()}';
+    }
+  }
+
+  String? getProfilePicture() {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.photoURL;
   }
 }
