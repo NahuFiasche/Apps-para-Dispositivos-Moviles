@@ -64,13 +64,13 @@ class GameDetailScreen extends ConsumerWidget {
   }
 }
 
-class _GameDetailBody extends StatelessWidget {
+class _GameDetailBody extends ConsumerWidget {
   final Game game;
 
   const _GameDetailBody({required this.game});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -90,28 +90,35 @@ class _GameDetailBody extends StatelessWidget {
 
         Chip(
           avatar: Icon(
-            Icons.calendar_today_rounded,
+            Icons.engineering_rounded,
             size: 18,
             color: colorScheme.primary,
           ),
-          label: Text(game.releaseYear, style: textTheme.bodyMedium),
+          label: Text(game.developer, style: textTheme.bodyMedium),
           backgroundColor: colorScheme.surfaceContainerHigh,
           side: BorderSide.none,
         ),
 
         const SizedBox(height: 8),
 
-        if (game.developer.isNotEmpty)
+        if (game.releaseYear.isNotEmpty)
           Chip(
             avatar: Icon(
-              Icons.engineering_rounded,
+              Icons.calendar_today_rounded,
               size: 18,
               color: colorScheme.primary,
             ),
-            label: Text(game.developer, style: textTheme.bodyMedium),
+            label: Text(
+              game.releaseDate.isNotEmpty ? game.releaseDate : game.releaseYear,
+              style: textTheme.bodyMedium,
+            ),
             backgroundColor: colorScheme.surfaceContainerHigh,
             side: BorderSide.none,
           ),
+
+        const SizedBox(height: 16),
+
+        _PlayedSwitch(colorScheme: colorScheme, game: game),
 
         const SizedBox(height: 16),
 
@@ -152,6 +159,81 @@ class _GameDetailBody extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _PlayedSwitch extends ConsumerStatefulWidget {
+  final ColorScheme colorScheme;
+  final Game game;
+
+  const _PlayedSwitch({required this.colorScheme, required this.game});
+
+  @override
+  ConsumerState<_PlayedSwitch> createState() => _PlayedSwitchState();
+}
+
+class _PlayedSwitchState extends ConsumerState<_PlayedSwitch> {
+  bool _isUpdating = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = widget.colorScheme;
+    final game = widget.game;
+
+    return Card(
+      elevation: 0,
+      color: colorScheme.surfaceContainerHigh,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Icon(
+              game.isPlayed
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.circle_outlined,
+              size: 20,
+              color: game.isPlayed
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _isUpdating
+                    ? 'Actualizando...'
+                    : (game.isPlayed ? 'Finalizado' : 'Sin jugar'),
+                style: textTheme.bodyLarge?.copyWith(
+                  color: game.isPlayed
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            _isUpdating
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  )
+                : Switch.adaptive(
+                    value: game.isPlayed,
+                    onChanged: (value) async {
+                      setState(() => _isUpdating = true);
+                      try {
+                        await ref
+                            .read(gamesProvider.notifier)
+                            .updateGame(game.copyWith(isPlayed: value));
+                      } finally {
+                        if (mounted) setState(() => _isUpdating = false);
+                      }
+                    },
+                  ),
+          ],
+        ),
+      ),
     );
   }
 }

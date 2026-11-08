@@ -83,6 +83,33 @@ class _GameLibrary extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (gamesList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.sports_esports_rounded,
+              size: 56,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Sin juegos todav\u00eda',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Agregá un juego con el botón "+"',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       itemCount: gamesList.length,
@@ -116,7 +143,9 @@ class _GameItem extends StatelessWidget {
           width: 48,
           height: 72,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            // Mismo radio que la Card (Material 3: 12) para que quede
+            // visualmente alineada con sus bordes.
+            borderRadius: BorderRadius.circular(12),
             child: getGameCover(colorScheme.onSurfaceVariant),
           ),
         ),
@@ -127,14 +156,29 @@ class _GameItem extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          game.releaseYear,
+          game.developer.isNotEmpty ? game.developer : 'Desarrollador desconocido',
           style: textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
         ),
-        trailing: Icon(
-          Icons.chevron_right_rounded,
-          color: colorScheme.onSurfaceVariant,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              game.isPlayed
+                  ? Icons.check_circle_rounded
+                  : Icons.circle_outlined,
+              size: 20,
+              color: game.isPlayed
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ],
         ),
 
         onTap: () {

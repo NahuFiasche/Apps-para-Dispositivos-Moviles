@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:exercise1_loginscreen/data/games_datasource.dart';
 import 'package:exercise1_loginscreen/entities/games.dart';
 
 class GamesDatabaseHelper {
@@ -12,20 +11,7 @@ class GamesDatabaseHelper {
 
   Future<List<Game>> getGames() async {
     final snapshot = await _gamesCollection.get();
-
-    if (snapshot.docs.isEmpty) {
-      await _initializeDefaultGames();
-      final freshSnapshot = await _gamesCollection.get();
-      return freshSnapshot.docs.map((doc) => _docToGame(doc)).toList();
-    }
-
     return snapshot.docs.map((doc) => _docToGame(doc)).toList();
-  }
-
-  Future<void> _initializeDefaultGames() async {
-    for (final game in gamesDatasource) {
-      await _gamesCollection.add(_gameToMap(game));
-    }
   }
 
   Future<void> insertGame(Game game) async {
@@ -44,9 +30,11 @@ class GamesDatabaseHelper {
     return {
       'title': game.title,
       'releaseYear': game.releaseYear,
+      'releaseDate': game.releaseDate,
       'developer': game.developer,
       'description': game.description,
       'gameCover': game.gameCover,
+      'isPlayed': game.isPlayed,
     };
   }
 
@@ -57,9 +45,11 @@ class GamesDatabaseHelper {
       id: doc.id,
       title: data['title'] ?? '',
       releaseYear: data['releaseYear'] ?? '',
+      releaseDate: data['releaseDate'] ?? '',
       developer: data['developer'] ?? '',
       description: data['description'] ?? '',
       gameCover: data['gameCover'] ?? '',
+      isPlayed: data['isPlayed'] ?? false,
     );
   }
 }

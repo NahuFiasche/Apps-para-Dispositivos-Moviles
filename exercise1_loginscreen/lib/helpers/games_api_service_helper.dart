@@ -103,14 +103,14 @@ class SteamGamesService {
       final data = payload is Map ? payload['data'] : null;
       if (!success || data is! Map) return searchResult;
 
+      // La fecha viene localizada (ej. "8 dic 2015"): la guardamos completa.
       final releaseDate = data['release_date'];
       final releaseString = releaseDate is Map
           ? releaseDate['date']?.toString() ?? ''
           : '';
-
-      // La fecha viene localizada (ej. "8 dic 2015"): extraemos el año
-      // buscando el primer número de 4 dígitos.
-      final yearMatch = RegExp(r'\d{4}').firstMatch(releaseString);
+      final releaseYear = releaseString.isNotEmpty
+          ? RegExp(r'\d{4}').firstMatch(releaseString)?.group(0) ?? ''
+          : '';
 
       // Carátula vertical estilo DVD de la biblioteca de Steam. No existe
       // para todos los juegos: la verificamos y si falla usamos el banner
@@ -126,7 +126,8 @@ class SteamGamesService {
         ...searchResult,
         'gameCover': cover.isNotEmpty ? cover : searchResult['tiny_image'],
         'description': data['short_description']?.toString() ?? '',
-        'releaseYear': yearMatch?.group(0) ?? '',
+        'releaseYear': releaseYear,
+        'releaseDate': releaseString,
         'developer': data['developers'] is List &&
                 (data['developers'] as List).isNotEmpty
             ? (data['developers'] as List).first.toString()

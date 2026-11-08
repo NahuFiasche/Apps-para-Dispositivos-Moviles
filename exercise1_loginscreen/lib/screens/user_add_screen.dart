@@ -300,23 +300,6 @@ class _AddUserBodyState extends ConsumerState<_AddUserBody> {
 
               const SizedBox(height: 24),
 
-              Text(
-                'Tu contraseña es',
-                style: theme.textTheme.titleMedium,
-              ),
-
-              const SizedBox(height: 8),
-
-              SelectableText(
-                userPassword,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
